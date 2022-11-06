@@ -24,12 +24,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/event"
+	"github.com/jsign/go-ethereum"
+	"github.com/jsign/go-ethereum/accounts/abi"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/event"
 )
 
 const basefeeWiggleMultiplier = 2
@@ -446,7 +446,6 @@ func (c *BoundContract) FilterLogs(opts *FilterOpts, name string, query ...[]int
 		}
 		return nil
 	}), nil
-
 	if err != nil {
 		return nil, nil, err
 	}

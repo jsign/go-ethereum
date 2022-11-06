@@ -24,9 +24,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/simulations/adapters"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/p2p/enode"
+	"github.com/jsign/go-ethereum/p2p/simulations/adapters"
 )
 
 // a map of mocker names to its function
@@ -105,7 +105,7 @@ func probabilistic(net *Network, quit chan struct{}, nodeCount int) {
 	if err != nil {
 		select {
 		case <-quit:
-			//error may be due to abortion of mocking; so the quit channel is closed
+			// error may be due to abortion of mocking; so the quit channel is closed
 			return
 		default:
 			panic("Could not startup node network for mocker")
@@ -130,7 +130,7 @@ func probabilistic(net *Network, quit chan struct{}, nodeCount int) {
 			highid = rand1
 			lowid = rand2
 		}
-		var steps = highid - lowid
+		steps := highid - lowid
 		wg.Add(steps)
 		for i := lowid; i < highid; i++ {
 			select {

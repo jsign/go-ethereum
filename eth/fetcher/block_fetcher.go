@@ -22,14 +22,14 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/prque"
-	"github.com/ethereum/go-ethereum/consensus"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/eth/protocols/eth"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/metrics"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/prque"
+	"github.com/jsign/go-ethereum/consensus"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/eth/protocols/eth"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/metrics"
+	"github.com/jsign/go-ethereum/trie"
 )
 
 const (
@@ -241,7 +241,8 @@ func (f *BlockFetcher) Stop() {
 // Notify announces the fetcher of the potential availability of a new block in
 // the network.
 func (f *BlockFetcher) Notify(peer string, hash common.Hash, number uint64, time time.Time,
-	headerFetcher headerRequesterFn, bodyFetcher bodyRequesterFn) error {
+	headerFetcher headerRequesterFn, bodyFetcher bodyRequesterFn,
+) error {
 	block := &blockAnnounce{
 		hash:        hash,
 		number:      number,

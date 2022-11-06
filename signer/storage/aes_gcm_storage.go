@@ -24,7 +24,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/jsign/go-ethereum/log"
 )
 
 type storedCredential struct {
@@ -114,7 +114,6 @@ func (s *AESEncryptedStorage) Del(key string) {
 func (s *AESEncryptedStorage) readEncryptedStorage() (map[string]storedCredential, error) {
 	creds := make(map[string]storedCredential)
 	raw, err := os.ReadFile(s.filename)
-
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Doesn't exist yet
@@ -135,7 +134,7 @@ func (s *AESEncryptedStorage) writeEncryptedStorage(creds map[string]storedCrede
 	if err != nil {
 		return err
 	}
-	if err = os.WriteFile(s.filename, raw, 0600); err != nil {
+	if err = os.WriteFile(s.filename, raw, 0o600); err != nil {
 		return err
 	}
 	return nil

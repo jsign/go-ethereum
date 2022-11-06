@@ -22,14 +22,14 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rpc"
 	lru "github.com/hashicorp/golang-lru"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/event"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/params"
+	"github.com/jsign/go-ethereum/rpc"
 )
 
 const sampleNumber = 3 // Number of transactions sampled in a block
@@ -242,6 +242,7 @@ func (s *txSorter) Len() int { return len(s.txs) }
 func (s *txSorter) Swap(i, j int) {
 	s.txs[i], s.txs[j] = s.txs[j], s.txs[i]
 }
+
 func (s *txSorter) Less(i, j int) bool {
 	// It's okay to discard the error because a tx would never be
 	// accepted into a block with an invalid effective tip.

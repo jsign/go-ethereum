@@ -23,12 +23,12 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/metrics"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/metrics"
+	"github.com/jsign/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/trie"
 )
 
 var emptyCodeHash = crypto.Keccak256(nil)
@@ -36,7 +36,7 @@ var emptyCodeHash = crypto.Keccak256(nil)
 type Code []byte
 
 func (c Code) String() string {
-	return string(c) //strings.Join(Disassemble(c), " ")
+	return string(c) // strings.Join(Disassemble(c), " ")
 }
 
 type Storage map[common.Hash]common.Hash

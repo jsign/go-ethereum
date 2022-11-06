@@ -34,11 +34,11 @@ import (
 	"unsafe"
 
 	"github.com/edsrzf/mmap-go"
-	"github.com/ethereum/go-ethereum/consensus"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/metrics"
-	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/hashicorp/golang-lru/simplelru"
+	"github.com/jsign/go-ethereum/consensus"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/metrics"
+	"github.com/jsign/go-ethereum/rpc"
 )
 
 var ErrInvalidDumpMagic = errors.New("invalid dump magic")
@@ -75,7 +75,7 @@ func isLittleEndian() bool {
 
 // memoryMap tries to memory map a file of uint32s for read only access.
 func memoryMap(path string, lock bool) (*os.File, mmap.MMap, []uint32, error) {
-	file, err := os.OpenFile(path, os.O_RDONLY, 0644)
+	file, err := os.OpenFile(path, os.O_RDONLY, 0o644)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -126,7 +126,7 @@ func memoryMapFile(file *os.File, write bool) (mmap.MMap, []uint32, error) {
 // path requested.
 func memoryMapAndGenerate(path string, size uint64, lock bool, generator func(buffer []uint32)) (*os.File, mmap.MMap, []uint32, error) {
 	// Ensure the data folder exists
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return nil, nil, nil, err
 	}
 	// Create a huge temporary empty file to fill with data
@@ -661,7 +661,7 @@ func (ethash *Ethash) Hashrate() float64 {
 	if ethash.config.PowMode != ModeNormal && ethash.config.PowMode != ModeTest {
 		return ethash.hashrate.Rate1()
 	}
-	var res = make(chan uint64, 1)
+	res := make(chan uint64, 1)
 
 	select {
 	case ethash.remote.fetchRateCh <- res:

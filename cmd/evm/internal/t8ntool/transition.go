@@ -26,19 +26,19 @@ import (
 	"path"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/consensus/misc"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/eth/tracers/logger"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/tests"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/hexutil"
+	"github.com/jsign/go-ethereum/consensus/misc"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/core/state"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/core/vm"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/eth/tracers/logger"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/params"
+	"github.com/jsign/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/tests"
 	"github.com/urfave/cli/v2"
 )
 
@@ -412,7 +412,7 @@ func saveFile(baseDir, filename string, data interface{}) error {
 		return NewError(ErrorJson, fmt.Errorf("failed marshalling output: %v", err))
 	}
 	location := path.Join(baseDir, filename)
-	if err = os.WriteFile(location, b, 0644); err != nil {
+	if err = os.WriteFile(location, b, 0o644); err != nil {
 		return NewError(ErrorIO, fmt.Errorf("failed writing output: %v", err))
 	}
 	log.Info("Wrote file", "file", location)

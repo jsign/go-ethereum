@@ -28,17 +28,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/internal/ethapi"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/hexutil"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/core/state"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/internal/ethapi"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/rpc"
+	"github.com/jsign/go-ethereum/trie"
 )
 
 // EthereumAPI provides an API to access Ethereum full node-related information.
@@ -542,7 +542,7 @@ func (api *DebugAPI) GetAccessibleState(from, to rpc.BlockNumber) (uint64, error
 		pivot = *p
 		log.Info("Found fast-sync pivot marker", "number", pivot)
 	}
-	var resolveNum = func(num rpc.BlockNumber) (uint64, error) {
+	resolveNum := func(num rpc.BlockNumber) (uint64, error) {
 		// We don't have state for pending (-2), so treat it as latest
 		if num.Int64() < 0 {
 			block := api.eth.blockchain.CurrentBlock()

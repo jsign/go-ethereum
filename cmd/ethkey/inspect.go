@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/accounts/keystore"
+	"github.com/jsign/go-ethereum/cmd/utils"
+	"github.com/jsign/go-ethereum/crypto"
 	"github.com/urfave/cli/v2"
 )
 
@@ -33,12 +33,10 @@ type outputInspect struct {
 	PrivateKey string
 }
 
-var (
-	privateFlag = &cli.BoolFlag{
-		Name:  "private",
-		Usage: "include the private key in the output",
-	}
-)
+var privateFlag = &cli.BoolFlag{
+	Name:  "private",
+	Usage: "include the private key in the output",
+}
 
 var commandInspect = &cli.Command{
 	Name:      "inspect",

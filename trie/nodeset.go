@@ -21,7 +21,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common"
 )
 
 // memoryNode is all the information we know about a single cached trie node
@@ -161,7 +161,7 @@ func (set *NodeSet) Hashes() []common.Hash {
 
 // Summary returns a string-representation of the NodeSet.
 func (set *NodeSet) Summary() string {
-	var out = new(strings.Builder)
+	out := new(strings.Builder)
 	fmt.Fprintf(out, "nodeset owner: %v\n", set.owner)
 	if set.updates != nil {
 		for _, key := range set.updates.order {

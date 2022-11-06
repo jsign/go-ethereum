@@ -20,9 +20,9 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/rlp"
 )
 
 type devnull struct{ len int }
@@ -125,7 +125,7 @@ func benchRLP(b *testing.B, encode bool) {
 		if encode {
 			b.Run(tc.name, func(b *testing.B) {
 				b.ReportAllocs()
-				var null = &devnull{}
+				null := &devnull{}
 				for i := 0; i < b.N; i++ {
 					rlp.Encode(null, tc.obj)
 				}

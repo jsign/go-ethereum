@@ -22,12 +22,12 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/ethdb/memorydb"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/math"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/ethdb/memorydb"
+	"github.com/jsign/go-ethereum/log"
 )
 
 const (
@@ -126,7 +126,7 @@ func (ctx *generatorContext) openIterator(kind string, start []byte) {
 func (ctx *generatorContext) reopenIterator(kind string) {
 	// Shift iterator one more step, so that we can reopen
 	// the iterator at the right position.
-	var iter = ctx.account
+	iter := ctx.account
 	if kind == snapStorage {
 		iter = ctx.storage
 	}

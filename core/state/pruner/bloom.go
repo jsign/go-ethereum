@@ -21,10 +21,10 @@ import (
 	"errors"
 	"os"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/log"
 	bloomfilter "github.com/holiman/bloomfilter/v2"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/log"
 )
 
 // stateBloomHasher is a wrapper around a byte blob to satisfy the interface API
@@ -90,7 +90,7 @@ func (bloom *stateBloom) Commit(filename, tempname string) error {
 		return err
 	}
 	// Ensure the file is synced to disk
-	f, err := os.OpenFile(tempname, os.O_RDWR, 0666)
+	f, err := os.OpenFile(tempname, os.O_RDWR, 0o666)
 	if err != nil {
 		return err
 	}

@@ -24,12 +24,12 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/common/compiler"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/internal/flags"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/jsign/go-ethereum/accounts/abi/bind"
+	"github.com/jsign/go-ethereum/cmd/utils"
+	"github.com/jsign/go-ethereum/common/compiler"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/internal/flags"
+	"github.com/jsign/go-ethereum/log"
 	"github.com/urfave/cli/v2"
 )
 
@@ -230,7 +230,7 @@ func abigen(c *cli.Context) error {
 		fmt.Printf("%s\n", code)
 		return nil
 	}
-	if err := os.WriteFile(c.String(outFlag.Name), []byte(code), 0600); err != nil {
+	if err := os.WriteFile(c.String(outFlag.Name), []byte(code), 0o600); err != nil {
 		utils.Fatalf("Failed to write ABI binding: %v", err)
 	}
 	return nil

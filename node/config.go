@@ -24,11 +24,11 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/p2p"
+	"github.com/jsign/go-ethereum/rpc"
 )
 
 const (
@@ -380,7 +380,7 @@ func (c *Config) NodeKey() *ecdsa.PrivateKey {
 		log.Crit(fmt.Sprintf("Failed to generate node key: %v", err))
 	}
 	instanceDir := filepath.Join(c.DataDir, c.name())
-	if err := os.MkdirAll(instanceDir, 0700); err != nil {
+	if err := os.MkdirAll(instanceDir, 0o700); err != nil {
 		log.Error(fmt.Sprintf("Failed to persist node key: %v", err))
 		return key
 	}
@@ -460,7 +460,7 @@ func getKeyStoreDir(conf *Config) (string, bool, error) {
 	if err != nil {
 		return "", false, err
 	}
-	if err := os.MkdirAll(keydir, 0700); err != nil {
+	if err := os.MkdirAll(keydir, 0o700); err != nil {
 		return "", false, err
 	}
 

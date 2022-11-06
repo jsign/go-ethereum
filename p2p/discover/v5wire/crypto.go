@@ -25,9 +25,9 @@ import (
 	"fmt"
 	"hash"
 
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/p2p/enode"
+	"github.com/jsign/go-ethereum/common/math"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/p2p/enode"
 	"golang.org/x/crypto/hkdf"
 )
 
@@ -116,7 +116,7 @@ type hashFn func() hash.Hash
 // deriveKeys creates the session keys.
 func deriveKeys(hash hashFn, priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey, n1, n2 enode.ID, challenge []byte) *session {
 	const text = "discovery v5 key agreement"
-	var info = make([]byte, 0, len(text)+len(n1)+len(n2))
+	info := make([]byte, 0, len(text)+len(n1)+len(n2))
 	info = append(info, text...)
 	info = append(info, n1[:]...)
 	info = append(info, n2[:]...)

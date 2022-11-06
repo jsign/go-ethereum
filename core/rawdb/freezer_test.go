@@ -27,8 +27,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/rlp"
 	"github.com/stretchr/testify/require"
 )
 
@@ -188,7 +188,7 @@ func TestFreezerConcurrentModifyTruncate(t *testing.T) {
 	f, _ := newFreezerForTesting(t, freezerTestTableDef)
 	defer f.Close()
 
-	var item = make([]byte, 256)
+	item := make([]byte, 256)
 
 	for i := 0; i < 1000; i++ {
 		// First reset and write 100 items.
@@ -258,7 +258,7 @@ func TestFreezerReadonlyValidate(t *testing.T) {
 	if err != nil {
 		t.Fatal("can't open freezer", err)
 	}
-	var item = make([]byte, 1024)
+	item := make([]byte, 1024)
 	aBatch := f.tables["a"].newBatch()
 	require.NoError(t, aBatch.AppendRaw(0, item))
 	require.NoError(t, aBatch.AppendRaw(1, item))

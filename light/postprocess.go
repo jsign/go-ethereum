@@ -25,16 +25,16 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/bitutil"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/bitutil"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/params"
+	"github.com/jsign/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/trie"
 )
 
 // IndexerConfig includes a set of configs for chain indexers.
@@ -276,7 +276,7 @@ func (c *ChtIndexerBackend) Prune(threshold uint64) error {
 	// Always keep genesis header in database.
 	start, end := uint64(1), (threshold+1)*c.sectionSize
 
-	var batch = c.diskdb.NewBatch()
+	batch := c.diskdb.NewBatch()
 	for {
 		numbers, hashes := rawdb.ReadAllCanonicalHashes(c.diskdb, start, end, 10240)
 		if len(numbers) == 0 {

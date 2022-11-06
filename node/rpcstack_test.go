@@ -26,11 +26,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/internal/testlog"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/websocket"
+	"github.com/jsign/go-ethereum/internal/testlog"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/rpc"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -85,8 +85,10 @@ func TestWebsocketOrigins(t *testing.T) {
 	tests := []originTest{
 		{
 			spec: "*", // allow all
-			expOk: []string{"", "http://test", "https://test", "http://test:8540", "https://test:8540",
-				"http://test.com", "https://foo.test", "http://testa", "http://atestb:8540", "https://atestb:8540"},
+			expOk: []string{
+				"", "http://test", "https://test", "http://test:8540", "https://test:8540",
+				"http://test.com", "https://foo.test", "http://testa", "http://atestb:8540", "https://atestb:8540",
+			},
 		},
 		{
 			spec:    "test",
@@ -101,7 +103,8 @@ func TestWebsocketOrigins(t *testing.T) {
 				"test",                                // no scheme, required by spec
 				"http://test",                         // wrong scheme
 				"http://test.foo", "https://a.test.x", // subdomain variations
-				"http://testx:8540", "https://xtest:8540"},
+				"http://testx:8540", "https://xtest:8540",
+			},
 		},
 		// ip tests
 		{
@@ -112,7 +115,8 @@ func TestWebsocketOrigins(t *testing.T) {
 				"http://12.34.56.78:443", // wrong scheme
 				"http://1.12.34.56.78",   // wrong 'domain name'
 				"http://12.34.56.78.a",   // wrong 'domain name'
-				"https://87.65.43.21", "http://87.65.43.21:8540", "https://87.65.43.21:8540"},
+				"https://87.65.43.21", "http://87.65.43.21:8540", "https://87.65.43.21:8540",
+			},
 		},
 		// port tests
 		{
@@ -121,7 +125,8 @@ func TestWebsocketOrigins(t *testing.T) {
 			expFail: []string{
 				"http://test", "https://test", // spec says port required
 				"http://test:8541", "https://test:8541", // wrong port
-				"http://bad", "https://bad", "http://bad:8540", "https://bad:8540"},
+				"http://bad", "https://bad", "http://bad:8540", "https://bad:8540",
+			},
 		},
 		// scheme and port
 		{
@@ -132,16 +137,20 @@ func TestWebsocketOrigins(t *testing.T) {
 				"http://test",                           // missing port, + wrong scheme
 				"http://test:8540",                      // wrong scheme
 				"http://test:8541", "https://test:8541", // wrong port
-				"http://bad", "https://bad", "http://bad:8540", "https://bad:8540"},
+				"http://bad", "https://bad", "http://bad:8540", "https://bad:8540",
+			},
 		},
 		// several allowed origins
 		{
 			spec: "localhost,http://127.0.0.1",
-			expOk: []string{"localhost", "http://localhost", "https://localhost:8443",
-				"http://127.0.0.1", "http://127.0.0.1:8080"},
+			expOk: []string{
+				"localhost", "http://localhost", "https://localhost:8443",
+				"http://127.0.0.1", "http://127.0.0.1:8080",
+			},
 			expFail: []string{
 				"https://127.0.0.1", // wrong scheme
-				"http://bad", "https://bad", "http://bad:8540", "https://bad:8540"},
+				"http://bad", "https://bad", "http://bad:8540", "https://bad:8540",
+			},
 		},
 	}
 	for _, tc := range tests {
@@ -247,7 +256,7 @@ func createAndStartServer(t *testing.T, conf *httpConfig, ws bool, wsConf *wsCon
 // wsRequest attempts to open a WebSocket connection to the given URL.
 func wsRequest(t *testing.T, url string, extraHeaders ...string) error {
 	t.Helper()
-	//t.Logf("checking WebSocket on %s (origin %q)", url, browserOrigin)
+	// t.Logf("checking WebSocket on %s (origin %q)", url, browserOrigin)
 
 	headers := make(http.Header)
 	// Apply extra headers.
@@ -306,7 +315,7 @@ func (testClaim) Valid() error {
 }
 
 func TestJWT(t *testing.T) {
-	var secret = []byte("secret")
+	secret := []byte("secret")
 	issueToken := func(secret []byte, method jwt.SigningMethod, input map[string]interface{}) string {
 		if method == nil {
 			method = jwt.SigningMethodHS256

@@ -21,11 +21,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/rlp"
 )
 
 // CheckDanglingStorage iterates the snap storage data, and verifies that all
@@ -117,7 +117,7 @@ func CheckJournalAccount(db ethdb.KeyValueStore, hash common.Hash) error {
 		}
 		it.Release()
 	}
-	var depth = 0
+	depth := 0
 
 	return iterateJournal(db, func(pRoot, root common.Hash, destructs map[common.Hash]struct{}, accounts map[common.Hash][]byte, storage map[common.Hash]map[common.Hash][]byte) error {
 		_, a := accounts[hash]

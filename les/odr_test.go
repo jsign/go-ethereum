@@ -26,18 +26,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/txpool"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/light"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/math"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/core/state"
+	"github.com/jsign/go-ethereum/core/txpool"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/core/vm"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/light"
+	"github.com/jsign/go-ethereum/params"
+	"github.com/jsign/go-ethereum/rlp"
 )
 
 type odrTestFn func(ctx context.Context, db ethdb.Database, config *params.ChainConfig, bc *core.BlockChain, lc *light.LightChain, bhash common.Hash) []byte
@@ -142,7 +142,7 @@ func odrContractCall(ctx context.Context, db ethdb.Database, config *params.Chai
 				txContext := core.NewEVMTxContext(msg)
 				vmenv := vm.NewEVM(context, txContext, statedb, config, vm.Config{NoBaseFee: true})
 
-				//vmenv := core.NewEnv(statedb, config, bc, msg, header, vm.Config{})
+				// vmenv := core.NewEnv(statedb, config, bc, msg, header, vm.Config{})
 				gp := new(core.GasPool).AddGas(math.MaxUint64)
 				result, _ := core.ApplyMessage(vmenv, msg, gp)
 				res = append(res, result.Return()...)
@@ -341,7 +341,7 @@ func testGetTxStatusFromUnindexedPeers(t *testing.T, protocol int) {
 		return nil
 	}
 
-	var testspecs = []struct {
+	testspecs := []struct {
 		peers     int
 		txLookups []uint64
 		txs       []common.Hash

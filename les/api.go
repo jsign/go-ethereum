@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/common/mclock"
-	vfs "github.com/ethereum/go-ethereum/les/vflux/server"
-	"github.com/ethereum/go-ethereum/p2p/enode"
+	"github.com/jsign/go-ethereum/common/hexutil"
+	"github.com/jsign/go-ethereum/common/mclock"
+	vfs "github.com/jsign/go-ethereum/les/vflux/server"
+	"github.com/jsign/go-ethereum/p2p/enode"
 )
 
 var (
@@ -67,7 +67,7 @@ func (api *LightServerAPI) ServerInfo() map[string]interface{} {
 	res["maximumCapacity"] = api.server.maxCapacity
 	_, res["totalCapacity"] = api.server.clientPool.Limits()
 	_, res["totalConnectedCapacity"] = api.server.clientPool.Active()
-	res["priorityConnectedCapacity"] = 0 //TODO connect when token sale module is added
+	res["priorityConnectedCapacity"] = 0 // TODO connect when token sale module is added
 	return res
 }
 

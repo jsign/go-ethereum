@@ -27,20 +27,20 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/mclock"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/forkid"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/les/flowcontrol"
-	"github.com/ethereum/go-ethereum/les/utils"
-	vfc "github.com/ethereum/go-ethereum/les/vflux/client"
-	vfs "github.com/ethereum/go-ethereum/les/vflux/server"
-	"github.com/ethereum/go-ethereum/light"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/mclock"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/core/forkid"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/les/flowcontrol"
+	"github.com/jsign/go-ethereum/les/utils"
+	vfc "github.com/jsign/go-ethereum/les/vflux/client"
+	vfs "github.com/jsign/go-ethereum/les/vflux/server"
+	"github.com/jsign/go-ethereum/light"
+	"github.com/jsign/go-ethereum/p2p"
+	"github.com/jsign/go-ethereum/p2p/enode"
+	"github.com/jsign/go-ethereum/params"
+	"github.com/jsign/go-ethereum/rlp"
 )
 
 var (
@@ -80,8 +80,10 @@ type keyValueEntry struct {
 	Value rlp.RawValue
 }
 
-type keyValueList []keyValueEntry
-type keyValueMap map[string]rlp.RawValue
+type (
+	keyValueList []keyValueEntry
+	keyValueMap  map[string]rlp.RawValue
+)
 
 func (l keyValueList) add(key string, val interface{}) keyValueList {
 	var entry keyValueEntry

@@ -25,10 +25,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethdb/memorydb"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/ethdb/memorydb"
 )
 
 func init() {
@@ -468,7 +468,7 @@ func TestSingleSideRangeProof(t *testing.T) {
 		}
 		sort.Sort(entries)
 
-		var cases = []int{0, 1, 50, 100, 1000, 2000, len(entries) - 1}
+		cases := []int{0, 1, 50, 100, 1000, 2000, len(entries) - 1}
 		for _, pos := range cases {
 			proof := memorydb.New()
 			if err := trie.Prove(common.Hash{}.Bytes(), 0, proof); err != nil {
@@ -503,7 +503,7 @@ func TestReverseSingleSideRangeProof(t *testing.T) {
 		}
 		sort.Sort(entries)
 
-		var cases = []int{0, 1, 50, 100, 1000, 2000, len(entries) - 1}
+		cases := []int{0, 1, 50, 100, 1000, 2000, len(entries) - 1}
 		for _, pos := range cases {
 			proof := memorydb.New()
 			if err := trie.Prove(entries[pos].k, 0, proof); err != nil {
@@ -553,7 +553,7 @@ func TestBadRangeProof(t *testing.T) {
 			keys = append(keys, entries[i].k)
 			vals = append(vals, entries[i].v)
 		}
-		var first, last = keys[0], keys[len(keys)-1]
+		first, last := keys[0], keys[len(keys)-1]
 		testcase := mrand.Intn(6)
 		var index int
 		switch testcase {
@@ -684,7 +684,7 @@ func TestHasRightElement(t *testing.T) {
 	}
 	sort.Sort(entries)
 
-	var cases = []struct {
+	cases := []struct {
 		start   int
 		end     int
 		hasMore bool
@@ -756,7 +756,7 @@ func TestEmptyRangeProof(t *testing.T) {
 	}
 	sort.Sort(entries)
 
-	var cases = []struct {
+	cases := []struct {
 		pos int
 		err bool
 	}{
@@ -1061,7 +1061,7 @@ func nonRandomTrie(n int) (*Trie, map[string]*kv) {
 		key := make([]byte, 32)
 		binary.LittleEndian.PutUint64(key, i)
 		binary.LittleEndian.PutUint64(value, i-max)
-		//value := &kv{common.LeftPadBytes([]byte{i}, 32), []byte{i}, false}
+		// value := &kv{common.LeftPadBytes([]byte{i}, 32), []byte{i}, false}
 		elem := &kv{key, value, false}
 		trie.Update(elem.k, elem.v)
 		vals[string(elem.k)] = elem

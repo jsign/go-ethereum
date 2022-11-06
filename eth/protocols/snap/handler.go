@@ -21,15 +21,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/light"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/metrics"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/enr"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/light"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/metrics"
+	"github.com/jsign/go-ethereum/p2p"
+	"github.com/jsign/go-ethereum/p2p/enode"
+	"github.com/jsign/go-ethereum/p2p/enr"
+	"github.com/jsign/go-ethereum/trie"
 )
 
 const (
@@ -366,7 +366,7 @@ func ServiceGetStorageRangesQuery(chain *core.BlockChain, req *GetStorageRangesP
 		if len(req.Origin) > 0 {
 			origin, req.Origin = common.BytesToHash(req.Origin), nil
 		}
-		var limit = common.HexToHash("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+		limit := common.HexToHash("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
 		if len(req.Limit) > 0 {
 			limit, req.Limit = common.BytesToHash(req.Limit), nil
 		}

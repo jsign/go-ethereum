@@ -24,13 +24,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus/ethash"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/consensus/ethash"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/params"
+	"github.com/jsign/go-ethereum/trie"
 )
 
 // makeChain creates a chain of n blocks starting at and including parent.
@@ -58,8 +58,10 @@ type chainData struct {
 	offset int
 }
 
-var chain *chainData
-var emptyChain *chainData
+var (
+	chain      *chainData
+	emptyChain *chainData
+)
 
 func init() {
 	// Create a chain of blocks to import
@@ -282,14 +284,14 @@ func XTestDelivery(t *testing.T) {
 		defer wg.Done()
 		c := 1
 		for {
-			//fmt.Printf("getting headers from %d\n", c)
+			// fmt.Printf("getting headers from %d\n", c)
 			headers := world.headers(c)
 			hashes := make([]common.Hash, len(headers))
 			for i, header := range headers {
 				hashes[i] = header.Hash()
 			}
 			l := len(headers)
-			//fmt.Printf("scheduling %d headers, first %d last %d\n",
+			// fmt.Printf("scheduling %d headers, first %d last %d\n",
 			//	l, headers[0].Number.Uint64(), headers[len(headers)-1].Number.Uint64())
 			q.Schedule(headers, hashes, uint64(c))
 			c += l
@@ -380,8 +382,8 @@ func XTestDelivery(t *testing.T) {
 		defer wg.Done()
 		for i := 0; i < 50; i++ {
 			time.Sleep(300 * time.Millisecond)
-			//world.tick()
-			//fmt.Printf("trying to progress\n")
+			// world.tick()
+			// fmt.Printf("trying to progress\n")
 			world.progress(rand.Intn(100))
 		}
 		for i := 0; i < 50; i++ {
@@ -422,6 +424,7 @@ func (n *network) getTransactions(blocknum uint64) types.Transactions {
 	index := blocknum - uint64(n.offset)
 	return n.chain[index].Transactions()
 }
+
 func (n *network) getReceipts(blocknum uint64) types.Receipts {
 	index := blocknum - uint64(n.offset)
 	if got := n.chain[index].Header().Number.Uint64(); got != blocknum {
@@ -437,10 +440,11 @@ func (n *network) forget(blocknum uint64) {
 	n.receipts = n.receipts[index:]
 	n.offset = int(blocknum)
 }
+
 func (n *network) progress(numBlocks int) {
 	n.lock.Lock()
 	defer n.lock.Unlock()
-	//fmt.Printf("progressing...\n")
+	// fmt.Printf("progressing...\n")
 	newBlocks, newR := makeChain(numBlocks, 0, n.chain[len(n.chain)-1], false)
 	n.chain = append(n.chain, newBlocks...)
 	n.receipts = append(n.receipts, newR...)
@@ -455,7 +459,7 @@ func (n *network) headers(from int) []*types.Header {
 	for index >= len(n.chain) {
 		// wait for progress
 		n.cond.L.Lock()
-		//fmt.Printf("header going into wait\n")
+		// fmt.Printf("header going into wait\n")
 		n.cond.Wait()
 		index = from - n.offset
 		n.cond.L.Unlock()

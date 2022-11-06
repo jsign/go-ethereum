@@ -22,11 +22,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common"
 )
 
 func TestInterfaceGetSet(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		method string
 		input  interface{}
 		expect interface{}

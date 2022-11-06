@@ -29,10 +29,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/console/prompt"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/console/prompt"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/log"
 	"github.com/peterh/liner"
 	"golang.org/x/term"
 )
@@ -61,10 +61,10 @@ func (c config) servers() []string {
 
 // flush dumps the contents of config to disk.
 func (c config) flush() {
-	os.MkdirAll(filepath.Dir(c.path), 0755)
+	os.MkdirAll(filepath.Dir(c.path), 0o755)
 
 	out, _ := json.MarshalIndent(c, "", "  ")
-	if err := os.WriteFile(c.path, out, 0644); err != nil {
+	if err := os.WriteFile(c.path, out, 0o644); err != nil {
 		log.Warn("Failed to save puppeth configs", "file", c.path, "err", err)
 	}
 }

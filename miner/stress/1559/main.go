@@ -25,27 +25,25 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/fdlimit"
-	"github.com/ethereum/go-ethereum/consensus/ethash"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/txpool"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/eth"
-	"github.com/ethereum/go-ethereum/eth/downloader"
-	"github.com/ethereum/go-ethereum/eth/ethconfig"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/miner"
-	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/fdlimit"
+	"github.com/jsign/go-ethereum/consensus/ethash"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/core/txpool"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/eth"
+	"github.com/jsign/go-ethereum/eth/downloader"
+	"github.com/jsign/go-ethereum/eth/ethconfig"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/miner"
+	"github.com/jsign/go-ethereum/node"
+	"github.com/jsign/go-ethereum/p2p"
+	"github.com/jsign/go-ethereum/p2p/enode"
+	"github.com/jsign/go-ethereum/params"
 )
 
-var (
-	londonBlock = big.NewInt(30) // Predefined london fork block for activating eip 1559.
-)
+var londonBlock = big.NewInt(30) // Predefined london fork block for activating eip 1559.
 
 func main() {
 	log.Root().SetHandler(log.LvlFilterHandler(log.LvlInfo, log.StreamHandler(os.Stderr, log.TerminalFormat(true))))
@@ -161,7 +159,7 @@ func makeTransaction(nonce uint64, privKey *ecdsa.PrivateKey, signer types.Signe
 
 	// Feecap and feetip are limited to 32 bytes. Offer a sightly
 	// larger buffer for creating both valid and invalid transactions.
-	var buf = make([]byte, 32+5)
+	buf := make([]byte, 32+5)
 	rand.Read(buf)
 	gasTipCap := new(big.Int).SetBytes(buf)
 

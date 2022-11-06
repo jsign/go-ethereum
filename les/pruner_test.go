@@ -23,8 +23,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/light"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/light"
 )
 
 func TestLightPruner(t *testing.T) {
@@ -56,7 +56,7 @@ func TestLightPruner(t *testing.T) {
 		it := client.db.NewIterator(prefix, nil)
 		defer it.Release()
 
-		var next = from
+		next := from
 		for it.Next() {
 			number := resolve(it.Key(), it.Value())
 			if number == nil || *number < from {
@@ -136,7 +136,7 @@ func TestLightPruner(t *testing.T) {
 	checkPruned(1, config.ChtSize-1)
 
 	// Ensure all APIs still work after pruning.
-	var cases = []struct {
+	cases := []struct {
 		from, to   uint64
 		methodName string
 		method     func(uint64) bool

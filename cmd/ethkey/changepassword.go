@@ -21,8 +21,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/cmd/utils"
+	"github.com/jsign/go-ethereum/accounts/keystore"
+	"github.com/jsign/go-ethereum/cmd/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -77,7 +77,7 @@ Change the password of a keyfile.`,
 		}
 
 		// Then write the new keyfile in place of the old one.
-		if err := os.WriteFile(keyfilepath, newJson, 0600); err != nil {
+		if err := os.WriteFile(keyfilepath, newJson, 0o600); err != nil {
 			utils.Fatalf("Error writing new keyfile to disk: %v", err)
 		}
 

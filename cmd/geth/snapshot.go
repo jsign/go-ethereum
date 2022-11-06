@@ -23,18 +23,18 @@ import (
 	"os"
 	"time"
 
-	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/state/pruner"
-	"github.com/ethereum/go-ethereum/core/state/snapshot"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/internal/flags"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum/cmd/utils"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/core/state"
+	"github.com/jsign/go-ethereum/core/state/pruner"
+	"github.com/jsign/go-ethereum/core/state/snapshot"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/internal/flags"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/trie"
 	cli "github.com/urfave/cli/v2"
 )
 
@@ -46,22 +46,21 @@ var (
 	emptyCode = crypto.Keccak256(nil)
 )
 
-var (
-	snapshotCommand = &cli.Command{
-		Name:        "snapshot",
-		Usage:       "A set of commands based on the snapshot",
-		Description: "",
-		Subcommands: []*cli.Command{
-			{
-				Name:      "prune-state",
-				Usage:     "Prune stale ethereum state data based on the snapshot",
-				ArgsUsage: "<root>",
-				Action:    pruneState,
-				Flags: flags.Merge([]cli.Flag{
-					utils.CacheTrieJournalFlag,
-					utils.BloomFilterSizeFlag,
-				}, utils.NetworkFlags, utils.DatabasePathFlags),
-				Description: `
+var snapshotCommand = &cli.Command{
+	Name:        "snapshot",
+	Usage:       "A set of commands based on the snapshot",
+	Description: "",
+	Subcommands: []*cli.Command{
+		{
+			Name:      "prune-state",
+			Usage:     "Prune stale ethereum state data based on the snapshot",
+			ArgsUsage: "<root>",
+			Action:    pruneState,
+			Flags: flags.Merge([]cli.Flag{
+				utils.CacheTrieJournalFlag,
+				utils.BloomFilterSizeFlag,
+			}, utils.NetworkFlags, utils.DatabasePathFlags),
+			Description: `
 geth snapshot prune-state <state-root>
 will prune historical state data with the help of the state snapshot.
 All trie nodes and contract codes that do not belong to the specified
@@ -75,49 +74,49 @@ If you specify another directory for the trie clean cache via "--cache.trie.jour
 during the use of Geth, please also specify it here for correct deletion. Otherwise
 the trie clean cache with default directory will be deleted.
 `,
-			},
-			{
-				Name:      "verify-state",
-				Usage:     "Recalculate state hash based on the snapshot for verification",
-				ArgsUsage: "<root>",
-				Action:    verifyState,
-				Flags:     flags.Merge(utils.NetworkFlags, utils.DatabasePathFlags),
-				Description: `
+		},
+		{
+			Name:      "verify-state",
+			Usage:     "Recalculate state hash based on the snapshot for verification",
+			ArgsUsage: "<root>",
+			Action:    verifyState,
+			Flags:     flags.Merge(utils.NetworkFlags, utils.DatabasePathFlags),
+			Description: `
 geth snapshot verify-state <state-root>
 will traverse the whole accounts and storages set based on the specified
 snapshot and recalculate the root hash of state for verification.
 In other words, this command does the snapshot to trie conversion.
 `,
-			},
-			{
-				Name:      "check-dangling-storage",
-				Usage:     "Check that there is no 'dangling' snap storage",
-				ArgsUsage: "<root>",
-				Action:    checkDanglingStorage,
-				Flags:     flags.Merge(utils.NetworkFlags, utils.DatabasePathFlags),
-				Description: `
+		},
+		{
+			Name:      "check-dangling-storage",
+			Usage:     "Check that there is no 'dangling' snap storage",
+			ArgsUsage: "<root>",
+			Action:    checkDanglingStorage,
+			Flags:     flags.Merge(utils.NetworkFlags, utils.DatabasePathFlags),
+			Description: `
 geth snapshot check-dangling-storage <state-root> traverses the snap storage 
 data, and verifies that all snapshot storage data has a corresponding account. 
 `,
-			},
-			{
-				Name:      "inspect-account",
-				Usage:     "Check all snapshot layers for the a specific account",
-				ArgsUsage: "<address | hash>",
-				Action:    checkAccount,
-				Flags:     flags.Merge(utils.NetworkFlags, utils.DatabasePathFlags),
-				Description: `
+		},
+		{
+			Name:      "inspect-account",
+			Usage:     "Check all snapshot layers for the a specific account",
+			ArgsUsage: "<address | hash>",
+			Action:    checkAccount,
+			Flags:     flags.Merge(utils.NetworkFlags, utils.DatabasePathFlags),
+			Description: `
 geth snapshot inspect-account <address | hash> checks all snapshot layers and prints out
 information about the specified address. 
 `,
-			},
-			{
-				Name:      "traverse-state",
-				Usage:     "Traverse the state with given root hash and perform quick verification",
-				ArgsUsage: "<root>",
-				Action:    traverseState,
-				Flags:     flags.Merge(utils.NetworkFlags, utils.DatabasePathFlags),
-				Description: `
+		},
+		{
+			Name:      "traverse-state",
+			Usage:     "Traverse the state with given root hash and perform quick verification",
+			ArgsUsage: "<root>",
+			Action:    traverseState,
+			Flags:     flags.Merge(utils.NetworkFlags, utils.DatabasePathFlags),
+			Description: `
 geth snapshot traverse-state <state-root>
 will traverse the whole state from the given state root and will abort if any
 referenced trie node or contract code is missing. This command can be used for
@@ -125,14 +124,14 @@ state integrity verification. The default checking target is the HEAD state.
 
 It's also usable without snapshot enabled.
 `,
-			},
-			{
-				Name:      "traverse-rawstate",
-				Usage:     "Traverse the state with given root hash and perform detailed verification",
-				ArgsUsage: "<root>",
-				Action:    traverseRawState,
-				Flags:     flags.Merge(utils.NetworkFlags, utils.DatabasePathFlags),
-				Description: `
+		},
+		{
+			Name:      "traverse-rawstate",
+			Usage:     "Traverse the state with given root hash and perform detailed verification",
+			ArgsUsage: "<root>",
+			Action:    traverseRawState,
+			Flags:     flags.Merge(utils.NetworkFlags, utils.DatabasePathFlags),
+			Description: `
 geth snapshot traverse-rawstate <state-root>
 will traverse the whole state from the given root and will abort if any referenced
 trie node or contract code is missing. This command can be used for state integrity
@@ -141,29 +140,28 @@ to traverse-state, but the check granularity is smaller.
 
 It's also usable without snapshot enabled.
 `,
-			},
-			{
-				Name:      "dump",
-				Usage:     "Dump a specific block from storage (same as 'geth dump' but using snapshots)",
-				ArgsUsage: "[? <blockHash> | <blockNum>]",
-				Action:    dumpState,
-				Flags: flags.Merge([]cli.Flag{
-					utils.ExcludeCodeFlag,
-					utils.ExcludeStorageFlag,
-					utils.StartKeyFlag,
-					utils.DumpLimitFlag,
-				}, utils.NetworkFlags, utils.DatabasePathFlags),
-				Description: `
+		},
+		{
+			Name:      "dump",
+			Usage:     "Dump a specific block from storage (same as 'geth dump' but using snapshots)",
+			ArgsUsage: "[? <blockHash> | <blockNum>]",
+			Action:    dumpState,
+			Flags: flags.Merge([]cli.Flag{
+				utils.ExcludeCodeFlag,
+				utils.ExcludeStorageFlag,
+				utils.StartKeyFlag,
+				utils.DumpLimitFlag,
+			}, utils.NetworkFlags, utils.DatabasePathFlags),
+			Description: `
 This command is semantically equivalent to 'geth dump', but uses the snapshots
 as the backend data source, making this command a lot faster. 
 
 The argument is interpreted as block number or hash. If none is provided, the latest
 block is used.
 `,
-			},
 		},
-	}
-)
+	},
+}
 
 func pruneState(ctx *cli.Context) error {
 	stack, config := makeConfigNode(ctx)
@@ -228,7 +226,7 @@ func verifyState(ctx *cli.Context) error {
 		log.Error("Too many arguments given")
 		return errors.New("too many arguments")
 	}
-	var root = headBlock.Root()
+	root := headBlock.Root()
 	if ctx.NArg() == 1 {
 		root, err = parseRoot(ctx.Args().First())
 		if err != nil {

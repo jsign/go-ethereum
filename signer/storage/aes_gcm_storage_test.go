@@ -23,8 +23,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/log"
 	"github.com/mattn/go-colorable"
 )
 
@@ -88,6 +88,7 @@ func TestFileStorage(t *testing.T) {
 		}
 	}
 }
+
 func TestEnd2End(t *testing.T) {
 	log.Root().SetHandler(log.LvlFilterHandler(log.Lvl(3), log.StreamHandler(colorable.NewColorableStderr(), log.TerminalFormat(true))))
 
@@ -139,7 +140,7 @@ func TestSwappedKeys(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err = os.WriteFile(s1.filename, raw, 0600); err != nil {
+		if err = os.WriteFile(s1.filename, raw, 0o600); err != nil {
 			t.Fatal(err)
 		}
 	}

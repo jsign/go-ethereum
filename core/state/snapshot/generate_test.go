@@ -23,17 +23,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/trie"
 	"golang.org/x/crypto/sha3"
 )
 
 func hashData(input []byte) common.Hash {
-	var hasher = sha3.NewLegacyKeccak256()
+	hasher := sha3.NewLegacyKeccak256()
 	var hash common.Hash
 	hasher.Reset()
 	hasher.Write(input)
@@ -46,7 +46,7 @@ func TestGeneration(t *testing.T) {
 	// We can't use statedb to make a test trie (circular dependency), so make
 	// a fake one manually. We're going with a small account trie of 3 accounts,
 	// two of which also has the same 3-slot storage trie attached.
-	var helper = newHelper()
+	helper := newHelper()
 	stRoot := helper.makeStorageTrie(common.Hash{}, common.Hash{}, []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, false)
 
 	helper.addTrieAccount("acc-1", &Account{Balance: big.NewInt(1), Root: stRoot, CodeHash: emptyCode.Bytes()})
@@ -80,7 +80,7 @@ func TestGenerateExistentState(t *testing.T) {
 	// We can't use statedb to make a test trie (circular dependency), so make
 	// a fake one manually. We're going with a small account trie of 3 accounts,
 	// two of which also has the same 3-slot storage trie attached.
-	var helper = newHelper()
+	helper := newHelper()
 
 	stRoot := helper.makeStorageTrie(common.Hash{}, hashData([]byte("acc-1")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 	helper.addTrieAccount("acc-1", &Account{Balance: big.NewInt(1), Root: stRoot, CodeHash: emptyCode.Bytes()})
@@ -573,7 +573,7 @@ func TestGenerateWithManyExtraAccounts(t *testing.T) {
 	{
 		// 100 accounts exist only in snapshot
 		for i := 0; i < 1000; i++ {
-			//acc := &Account{Balance: big.NewInt(int64(i)), Root: stTrie.Hash().Bytes(), CodeHash: emptyCode.Bytes()}
+			// acc := &Account{Balance: big.NewInt(int64(i)), Root: stTrie.Hash().Bytes(), CodeHash: emptyCode.Bytes()}
 			acc := &Account{Balance: big.NewInt(int64(i)), Root: emptyRoot.Bytes(), CodeHash: emptyCode.Bytes()}
 			val, _ := rlp.EncodeToBytes(acc)
 			key := hashData([]byte(fmt.Sprintf("acc-%d", i)))
@@ -679,7 +679,7 @@ func TestGenerateWithMalformedSnapdata(t *testing.T) {
 }
 
 func TestGenerateFromEmptySnap(t *testing.T) {
-	//enableLogging()
+	// enableLogging()
 	accountCheckRange = 10
 	storageCheckRange = 20
 	helper := newHelper()
@@ -813,7 +813,7 @@ func populateDangling(disk ethdb.KeyValueStore) {
 //
 // This test will populate some dangling storages to see if they can be cleaned up.
 func TestGenerateCompleteSnapshotWithDanglingStorage(t *testing.T) {
-	var helper = newHelper()
+	helper := newHelper()
 
 	stRoot := helper.makeStorageTrie(common.Hash{}, hashData([]byte("acc-1")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 	helper.addAccount("acc-1", &Account{Balance: big.NewInt(1), Root: stRoot, CodeHash: emptyCode.Bytes()})
@@ -848,7 +848,7 @@ func TestGenerateCompleteSnapshotWithDanglingStorage(t *testing.T) {
 //
 // This test will populate some dangling storages to see if they can be cleaned up.
 func TestGenerateBrokenSnapshotWithDanglingStorage(t *testing.T) {
-	var helper = newHelper()
+	helper := newHelper()
 
 	stRoot := helper.makeStorageTrie(common.Hash{}, hashData([]byte("acc-1")), []string{"key-1", "key-2", "key-3"}, []string{"val-1", "val-2", "val-3"}, true)
 	helper.addTrieAccount("acc-1", &Account{Balance: big.NewInt(1), Root: stRoot, CodeHash: emptyCode.Bytes()})

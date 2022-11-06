@@ -23,12 +23,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/internal/flags"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/gballet/go-verkle"
+	"github.com/jsign/go-ethereum/cmd/utils"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/internal/flags"
+	"github.com/jsign/go-ethereum/log"
 	cli "github.com/urfave/cli/v2"
 )
 
@@ -203,7 +203,7 @@ func expandVerkle(ctx *cli.Context) error {
 		root.Get(key, chaindb.Get)
 	}
 
-	if err := os.WriteFile("dump.dot", []byte(verkle.ToDot(root)), 0600); err != nil {
+	if err := os.WriteFile("dump.dot", []byte(verkle.ToDot(root)), 0o600); err != nil {
 		log.Error("Failed to dump file", "err", err)
 	} else {
 		log.Info("Tree was dumped to file", "file", "dump.dot")

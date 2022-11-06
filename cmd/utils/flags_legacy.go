@@ -19,7 +19,7 @@ package utils
 import (
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/internal/flags"
+	"github.com/jsign/go-ethereum/internal/flags"
 	"github.com/urfave/cli/v2"
 )
 
@@ -35,14 +35,12 @@ var DeprecatedFlags = []cli.Flag{
 	NoUSBFlag,
 }
 
-var (
-	// (Deprecated May 2020, shown in aliased flags section)
-	NoUSBFlag = &cli.BoolFlag{
-		Name:     "nousb",
-		Usage:    "Disables monitoring for and managing USB hardware wallets (deprecated)",
-		Category: flags.DeprecatedCategory,
-	}
-)
+// (Deprecated May 2020, shown in aliased flags section)
+var NoUSBFlag = &cli.BoolFlag{
+	Name:     "nousb",
+	Usage:    "Disables monitoring for and managing USB hardware wallets (deprecated)",
+	Category: flags.DeprecatedCategory,
+}
 
 // showDeprecated displays deprecated flags that will be soon removed from the codebase.
 func showDeprecated(*cli.Context) error {

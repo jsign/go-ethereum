@@ -19,9 +19,9 @@ package ethash
 import (
 	"errors"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/hexutil"
+	"github.com/jsign/go-ethereum/core/types"
 )
 
 var errEthashStopped = errors.New("ethash stopped")
@@ -69,7 +69,7 @@ func (api *API) SubmitWork(nonce types.BlockNonce, hash, digest common.Hash) boo
 		return false
 	}
 
-	var errc = make(chan error, 1)
+	errc := make(chan error, 1)
 	select {
 	case api.ethash.remote.submitWorkCh <- &mineResult{
 		nonce:     nonce,
@@ -95,7 +95,7 @@ func (api *API) SubmitHashrate(rate hexutil.Uint64, id common.Hash) bool {
 		return false
 	}
 
-	var done = make(chan struct{}, 1)
+	done := make(chan struct{}, 1)
 	select {
 	case api.ethash.remote.submitRateCh <- &hashrate{done: done, rate: uint64(rate), id: id}:
 	case <-api.ethash.remote.exitCh:

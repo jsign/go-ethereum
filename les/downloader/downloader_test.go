@@ -26,15 +26,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/state/snapshot"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/eth/protocols/eth"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/core/state/snapshot"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/eth/protocols/eth"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/event"
+	"github.com/jsign/go-ethereum/trie"
 )
 
 // Reduce some of the parameters to make the tester faster.
@@ -719,9 +719,11 @@ func testBoundedForkedSync(t *testing.T, protocol uint, mode SyncMode) {
 func TestBoundedHeavyForkedSync66Full(t *testing.T) {
 	testBoundedHeavyForkedSync(t, eth.ETH66, FullSync)
 }
+
 func TestBoundedHeavyForkedSync66Fast(t *testing.T) {
 	testBoundedHeavyForkedSync(t, eth.ETH66, FastSync)
 }
+
 func TestBoundedHeavyForkedSync66Light(t *testing.T) {
 	testBoundedHeavyForkedSync(t, eth.ETH66, LightSync)
 }
@@ -840,7 +842,7 @@ func testMultiProtoSync(t *testing.T, protocol uint, mode SyncMode) {
 
 	// Create peers of every type
 	tester.newPeer("peer 66", eth.ETH66, chain)
-	//tester.newPeer("peer 65", eth.ETH67, chain)
+	// tester.newPeer("peer 65", eth.ETH67, chain)
 
 	// Synchronise with the requested peer and make sure all blocks were retrieved
 	if err := tester.sync(fmt.Sprintf("peer %d", protocol), nil, mode); err != nil {
@@ -1063,9 +1065,11 @@ func testInvalidHeaderRollback(t *testing.T, protocol uint, mode SyncMode) {
 func TestHighTDStarvationAttack66Full(t *testing.T) {
 	testHighTDStarvationAttack(t, eth.ETH66, FullSync)
 }
+
 func TestHighTDStarvationAttack66Fast(t *testing.T) {
 	testHighTDStarvationAttack(t, eth.ETH66, FastSync)
 }
+
 func TestHighTDStarvationAttack66Light(t *testing.T) {
 	testHighTDStarvationAttack(t, eth.ETH66, LightSync)
 }
@@ -1206,8 +1210,8 @@ func checkProgress(t *testing.T, d *Downloader, stage string, want ethereum.Sync
 	t.Helper()
 
 	p := d.Progress()
-	//p.KnownStates, p.PulledStates = 0, 0
-	//want.KnownStates, want.PulledStates = 0, 0
+	// p.KnownStates, p.PulledStates = 0, 0
+	// want.KnownStates, want.PulledStates = 0, 0
 	if p != want {
 		t.Fatalf("%s progress mismatch:\nhave %+v\nwant %+v", stage, p, want)
 	}
@@ -1468,12 +1472,15 @@ func (ftp *floodingTestPeer) Head() (common.Hash, *big.Int) { return ftp.peer.He
 func (ftp *floodingTestPeer) RequestHeadersByHash(hash common.Hash, count int, skip int, reverse bool) error {
 	return ftp.peer.RequestHeadersByHash(hash, count, skip, reverse)
 }
+
 func (ftp *floodingTestPeer) RequestBodies(hashes []common.Hash) error {
 	return ftp.peer.RequestBodies(hashes)
 }
+
 func (ftp *floodingTestPeer) RequestReceipts(hashes []common.Hash) error {
 	return ftp.peer.RequestReceipts(hashes)
 }
+
 func (ftp *floodingTestPeer) RequestNodeData(hashes []common.Hash) error {
 	return ftp.peer.RequestNodeData(hashes)
 }
@@ -1517,33 +1524,41 @@ func TestRemoteHeaderRequestSpan(t *testing.T) {
 		expected     []int
 	}{
 		// Remote is way higher. We should ask for the remote head and go backwards
-		{1500, 1000,
+		{
+			1500, 1000,
 			[]int{1323, 1339, 1355, 1371, 1387, 1403, 1419, 1435, 1451, 1467, 1483, 1499},
 		},
-		{15000, 13006,
+		{
+			15000, 13006,
 			[]int{14823, 14839, 14855, 14871, 14887, 14903, 14919, 14935, 14951, 14967, 14983, 14999},
 		},
 		// Remote is pretty close to us. We don't have to fetch as many
-		{1200, 1150,
+		{
+			1200, 1150,
 			[]int{1149, 1154, 1159, 1164, 1169, 1174, 1179, 1184, 1189, 1194, 1199},
 		},
 		// Remote is equal to us (so on a fork with higher td)
 		// We should get the closest couple of ancestors
-		{1500, 1500,
+		{
+			1500, 1500,
 			[]int{1497, 1499},
 		},
 		// We're higher than the remote! Odd
-		{1000, 1500,
+		{
+			1000, 1500,
 			[]int{997, 999},
 		},
 		// Check some weird edgecases that it behaves somewhat rationally
-		{0, 1500,
+		{
+			0, 1500,
 			[]int{0, 2},
 		},
-		{6000000, 0,
+		{
+			6000000, 0,
 			[]int{5999823, 5999839, 5999855, 5999871, 5999887, 5999903, 5999919, 5999935, 5999951, 5999967, 5999983, 5999999},
 		},
-		{0, 0,
+		{
+			0, 0,
 			[]int{0, 2},
 		},
 	}

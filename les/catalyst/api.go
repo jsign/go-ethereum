@@ -21,13 +21,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core/beacon"
-	"github.com/ethereum/go-ethereum/les"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/hexutil"
+	"github.com/jsign/go-ethereum/core/beacon"
+	"github.com/jsign/go-ethereum/les"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/node"
+	"github.com/jsign/go-ethereum/rpc"
 )
 
 // Register adds catalyst APIs to the light client.

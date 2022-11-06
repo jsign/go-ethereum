@@ -22,13 +22,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/bitutil"
-	"github.com/ethereum/go-ethereum/core/bloombits"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/node"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/bitutil"
+	"github.com/jsign/go-ethereum/core/bloombits"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/node"
 )
 
 func BenchmarkBloomBits512(b *testing.B) {
@@ -151,7 +151,7 @@ func benchmarkBloomBits(b *testing.B, sectionSize uint64) {
 
 //nolint:unused
 func clearBloomBits(db ethdb.Database) {
-	var bloomBitsPrefix = []byte("bloomBits-")
+	bloomBitsPrefix := []byte("bloomBits-")
 	fmt.Println("Clearing bloombits data...")
 	it := db.NewIterator(bloomBitsPrefix, nil)
 	for it.Next() {

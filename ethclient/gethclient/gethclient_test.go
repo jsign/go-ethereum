@@ -23,19 +23,19 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus/ethash"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/eth"
-	"github.com/ethereum/go-ethereum/eth/ethconfig"
-	"github.com/ethereum/go-ethereum/eth/filters"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/jsign/go-ethereum"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/consensus/ethash"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/eth"
+	"github.com/jsign/go-ethereum/eth/ethconfig"
+	"github.com/jsign/go-ethereum/eth/filters"
+	"github.com/jsign/go-ethereum/ethclient"
+	"github.com/jsign/go-ethereum/node"
+	"github.com/jsign/go-ethereum/params"
+	"github.com/jsign/go-ethereum/rpc"
 )
 
 var (
@@ -109,25 +109,32 @@ func TestGethClient(t *testing.T) {
 		{
 			"TestGetProof",
 			func(t *testing.T) { testGetProof(t, client) },
-		}, {
+		},
+		{
 			"TestGCStats",
 			func(t *testing.T) { testGCStats(t, client) },
-		}, {
+		},
+		{
 			"TestMemStats",
 			func(t *testing.T) { testMemStats(t, client) },
-		}, {
+		},
+		{
 			"TestGetNodeInfo",
 			func(t *testing.T) { testGetNodeInfo(t, client) },
-		}, {
+		},
+		{
 			"TestSetHead",
 			func(t *testing.T) { testSetHead(t, client) },
-		}, {
+		},
+		{
 			"TestSubscribePendingTxHashes",
 			func(t *testing.T) { testSubscribePendingTransactions(t, client) },
-		}, {
+		},
+		{
 			"TestSubscribePendingTxs",
 			func(t *testing.T) { testSubscribeFullPendingTransactions(t, client) },
-		}, {
+		},
+		{
 			"TestCallContract",
 			func(t *testing.T) { testCallContract(t, client) },
 		},
@@ -366,17 +373,17 @@ func testCallContract(t *testing.T, client *rpc.Client) {
 
 func TestOverrideAccountMarshal(t *testing.T) {
 	om := map[common.Address]OverrideAccount{
-		common.Address{0x11}: OverrideAccount{
+		{0x11}: {
 			// Zero-valued nonce is not overriddden, but simply dropped by the encoder.
 			Nonce: 0,
 		},
-		common.Address{0xaa}: OverrideAccount{
+		{0xaa}: {
 			Nonce: 5,
 		},
-		common.Address{0xbb}: OverrideAccount{
+		{0xbb}: {
 			Code: []byte{1},
 		},
-		common.Address{0xcc}: OverrideAccount{
+		{0xcc}: {
 			// 'code', 'balance', 'state' should be set when input is
 			// a non-nil but empty value.
 			Code:    []byte{},

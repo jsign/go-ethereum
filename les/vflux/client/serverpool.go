@@ -24,15 +24,15 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common/mclock"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/les/utils"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/metrics"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/enr"
-	"github.com/ethereum/go-ethereum/p2p/nodestate"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/common/mclock"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/les/utils"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/metrics"
+	"github.com/jsign/go-ethereum/p2p/enode"
+	"github.com/jsign/go-ethereum/p2p/enr"
+	"github.com/jsign/go-ethereum/p2p/nodestate"
+	"github.com/jsign/go-ethereum/rlp"
 )
 
 const (
@@ -221,7 +221,8 @@ func (s *serverPoolIterator) Close() {
 // AddMetrics adds metrics to the server pool. Should be called before Start().
 func (s *ServerPool) AddMetrics(
 	suggestedTimeoutGauge, totalValueGauge, serverSelectableGauge, serverConnectedGauge metrics.Gauge,
-	sessionValueMeter, serverDialedMeter metrics.Meter) {
+	sessionValueMeter, serverDialedMeter metrics.Meter,
+) {
 	s.suggestedTimeoutGauge = suggestedTimeoutGauge
 	s.totalValueGauge = totalValueGauge
 	s.sessionValueMeter = sessionValueMeter

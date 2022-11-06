@@ -26,17 +26,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/internal/ethapi"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/signer/core"
-	"github.com/ethereum/go-ethereum/signer/core/apitypes"
-	"github.com/ethereum/go-ethereum/signer/fourbyte"
-	"github.com/ethereum/go-ethereum/signer/storage"
+	"github.com/jsign/go-ethereum/accounts"
+	"github.com/jsign/go-ethereum/accounts/keystore"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/hexutil"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/internal/ethapi"
+	"github.com/jsign/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/signer/core"
+	"github.com/jsign/go-ethereum/signer/core/apitypes"
+	"github.com/jsign/go-ethereum/signer/fourbyte"
+	"github.com/jsign/go-ethereum/signer/storage"
 )
 
 // Used for testing
@@ -76,7 +76,7 @@ func (ui *headlessUi) ApproveSignData(request *core.SignDataRequest) (core.SignD
 
 func (ui *headlessUi) ApproveListing(request *core.ListRequest) (core.ListResponse, error) {
 	approval := <-ui.approveCh
-	//fmt.Printf("approval %s\n", approval)
+	// fmt.Printf("approval %s\n", approval)
 	switch approval {
 	case "A":
 		return core.ListResponse{request.Accounts}, nil
@@ -97,12 +97,12 @@ func (ui *headlessUi) ApproveNewAccount(request *core.NewAccountRequest) (core.N
 }
 
 func (ui *headlessUi) ShowError(message string) {
-	//stdout is used by communication
+	// stdout is used by communication
 	fmt.Fprintln(os.Stderr, message)
 }
 
 func (ui *headlessUi) ShowInfo(message string) {
-	//stdout is used by communication
+	// stdout is used by communication
 	fmt.Fprintln(os.Stderr, message)
 }
 
@@ -125,6 +125,7 @@ func setup(t *testing.T) (*core.SignerAPI, *headlessUi) {
 	api := core.NewSignerAPI(am, 1337, true, ui, db, true, &storage.NoStorage{})
 	return api, ui
 }
+
 func createAccount(ui *headlessUi, api *core.SignerAPI, t *testing.T) {
 	ui.approveCh <- "Y"
 	ui.inputCh <- "a_long_password"
@@ -230,7 +231,8 @@ func mkTestTx(from common.MixedcaseAddress) apitypes.SendTxArgs {
 		GasPrice: &gasPrice,
 		Value:    value,
 		Data:     &data,
-		Nonce:    nonce}
+		Nonce:    nonce,
+	}
 	return tx
 }
 
@@ -284,7 +286,7 @@ func TestSignTx(t *testing.T) {
 	parsedTx := &types.Transaction{}
 	rlp.Decode(bytes.NewReader(res.Raw), parsedTx)
 
-	//The tx should NOT be modified by the UI
+	// The tx should NOT be modified by the UI
 	if parsedTx.Value().Cmp(tx.Value.ToInt()) != 0 {
 		t.Errorf("Expected value to be unchanged, expected %v got %v", tx.Value, parsedTx.Value())
 	}
@@ -299,7 +301,7 @@ func TestSignTx(t *testing.T) {
 		t.Error("Expected tx to be unmodified by UI")
 	}
 
-	//The tx is modified by the UI
+	// The tx is modified by the UI
 	control.approveCh <- "M"
 	control.inputCh <- "a_long_password"
 
@@ -310,7 +312,7 @@ func TestSignTx(t *testing.T) {
 	parsedTx2 := &types.Transaction{}
 	rlp.Decode(bytes.NewReader(res.Raw), parsedTx2)
 
-	//The tx should be modified by the UI
+	// The tx should be modified by the UI
 	if parsedTx2.Value().Cmp(tx.Value.ToInt()) != 0 {
 		t.Errorf("Expected value to be unchanged, got %v", parsedTx.Value())
 	}

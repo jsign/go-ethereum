@@ -24,15 +24,15 @@ import (
 	"time"
 
 	"github.com/VictoriaMetrics/fastcache"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/ethdb/memorydb"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/hexutil"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/ethdb/memorydb"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/trie"
 )
 
 var (
@@ -294,7 +294,8 @@ func (dl *diskLayer) proveRange(ctx *generatorContext, trieId *trie.ID, prefix [
 			diskMore: diskMore,
 			trieMore: cont,
 			proofErr: err,
-			tr:       tr},
+			tr:       tr,
+		},
 		nil
 }
 
@@ -539,7 +540,7 @@ func generateStorages(ctx *generatorContext, dl *diskLayer, stateRoot common.Has
 		return nil
 	}
 	// Loop for re-generating the missing storage slots.
-	var origin = common.CopyBytes(storeMarker)
+	origin := common.CopyBytes(storeMarker)
 	for {
 		id := trie.StorageTrieID(stateRoot, account, storageRoot)
 		exhausted, last, err := dl.generateRange(ctx, id, append(rawdb.SnapshotStoragePrefix, account.Bytes()...), snapStorage, origin, storageCheckRange, onStorage, nil)
@@ -636,7 +637,7 @@ func generateAccounts(ctx *generatorContext, dl *diskLayer, accMarker []byte) er
 	}
 	// Always reset the initial account range as 1 whenever recover from the
 	// interruption. TODO(rjl493456442) can we remove it?
-	var accountRange = accountCheckRange
+	accountRange := accountCheckRange
 	if len(accMarker) > 0 {
 		accountRange = 1
 	}

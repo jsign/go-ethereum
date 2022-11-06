@@ -25,15 +25,15 @@ import (
 	"time"
 
 	mapset "github.com/deckarep/golang-set"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/consensus"
-	"github.com/ethereum/go-ethereum/consensus/misc"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/math"
+	"github.com/jsign/go-ethereum/consensus"
+	"github.com/jsign/go-ethereum/consensus/misc"
+	"github.com/jsign/go-ethereum/core/state"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/params"
+	"github.com/jsign/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/trie"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -515,8 +515,11 @@ func calcDifficultyFrontier(time uint64, parent *types.Header) *big.Int {
 
 // Exported for fuzzing
 var FrontierDifficultyCalculator = calcDifficultyFrontier
-var HomesteadDifficultyCalculator = calcDifficultyHomestead
-var DynamicDifficultyCalculator = makeDifficultyCalculator
+
+var (
+	HomesteadDifficultyCalculator = calcDifficultyHomestead
+	DynamicDifficultyCalculator   = makeDifficultyCalculator
+)
 
 // verifySeal checks whether a block satisfies the PoW difficulty requirements,
 // either using the usual ethash cache for it, or alternatively using a full DAG

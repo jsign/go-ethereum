@@ -24,11 +24,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/console/prompt"
-	"github.com/ethereum/go-ethereum/p2p/dnsdisc"
-	"github.com/ethereum/go-ethereum/p2p/enode"
+	"github.com/jsign/go-ethereum/accounts/keystore"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/console/prompt"
+	"github.com/jsign/go-ethereum/p2p/dnsdisc"
+	"github.com/jsign/go-ethereum/p2p/enode"
 	"github.com/urfave/cli/v2"
 )
 
@@ -377,11 +377,11 @@ func writeTreeMetadata(directory string, def *dnsDefinition) {
 	if err != nil {
 		exit(err)
 	}
-	if err := os.Mkdir(directory, 0744); err != nil && !os.IsExist(err) {
+	if err := os.Mkdir(directory, 0o744); err != nil && !os.IsExist(err) {
 		exit(err)
 	}
 	metaFile, _ := treeDefinitionFiles(directory)
-	if err := os.WriteFile(metaFile, metaJSON, 0644); err != nil {
+	if err := os.WriteFile(metaFile, metaJSON, 0o644); err != nil {
 		exit(err)
 	}
 }
@@ -410,7 +410,7 @@ func writeTXTJSON(file string, txt map[string]string) {
 		fmt.Println()
 		return
 	}
-	if err := os.WriteFile(file, txtJSON, 0644); err != nil {
+	if err := os.WriteFile(file, txtJSON, 0o644); err != nil {
 		exit(err)
 	}
 }

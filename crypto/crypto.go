@@ -29,9 +29,9 @@ import (
 	"math/big"
 	"os"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/math"
+	"github.com/jsign/go-ethereum/rlp"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -249,7 +249,7 @@ func checkKeyFileEnd(r *bufio.Reader) error {
 // restrictive permissions. The key data is saved hex-encoded.
 func SaveECDSA(file string, key *ecdsa.PrivateKey) error {
 	k := hex.EncodeToString(FromECDSA(key))
-	return os.WriteFile(file, []byte(k), 0600)
+	return os.WriteFile(file, []byte(k), 0o600)
 }
 
 // GenerateKey generates a new private key.

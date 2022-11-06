@@ -17,9 +17,9 @@
 package vm
 
 import (
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/holiman/uint256"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/math"
 )
 
 // calcMemSize64 calculates the required memory size, and returns

@@ -20,9 +20,10 @@ import (
 	"bytes"
 	"container/heap"
 	"errors"
+	"reflect"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/ethdb"
 )
 
 // Iterator is a key-value trie iterator that traverses a Trie.
@@ -84,6 +85,9 @@ type NodeIterator interface {
 	// Callers must not retain references to the return value after calling Next.
 	// For leaf nodes, the last element of the path is the 'terminator symbol' 0x10.
 	Path() []byte
+
+	Stack() []string
+	Type() string
 
 	// NodeBlob returns the rlp-encoded value of the current iterated node.
 	// If the node is an embedded node in its parent, nil is returned then.
@@ -167,6 +171,18 @@ func newNodeIterator(trie *Trie, start []byte) NodeIterator {
 
 func (it *nodeIterator) AddResolver(resolver ethdb.KeyValueReader) {
 	it.resolver = resolver
+}
+
+func (it *nodeIterator) Type() string {
+	return reflect.TypeOf(it.stack[len(it.stack)-1].node).String()
+}
+
+func (it *nodeIterator) Stack() []string {
+	nodesStack := make([]string, len(it.stack))
+	for i := range it.stack {
+		nodesStack[i] = reflect.TypeOf(it.stack[i].node).String()
+	}
+	return nodesStack
 }
 
 func (it *nodeIterator) Hash() common.Hash {
@@ -557,6 +573,14 @@ func NewDifferenceIterator(a, b NodeIterator) (NodeIterator, *int) {
 	return it, &it.count
 }
 
+func (it *differenceIterator) Type() string {
+	panic("TODO")
+}
+
+func (it *differenceIterator) Stack() []string {
+	panic("TODO")
+}
+
 func (it *differenceIterator) Hash() common.Hash {
 	return it.b.Hash()
 }
@@ -670,6 +694,14 @@ func NewUnionIterator(iters []NodeIterator) (NodeIterator, *int) {
 
 	ui := &unionIterator{items: &h}
 	return ui, &ui.count
+}
+
+func (it *unionIterator) Stack() []string {
+	panic("TODO")
+}
+
+func (it *unionIterator) Type() string {
+	panic("TODO")
 }
 
 func (it *unionIterator) Hash() common.Hash {

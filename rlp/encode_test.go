@@ -26,7 +26,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/jsign/go-ethereum/common/math"
 )
 
 type testEncoder struct {
@@ -566,7 +566,7 @@ type structPtrSlice []*structSliceElem
 
 func BenchmarkEncodeStructPtrSlice(b *testing.B) {
 	var out bytes.Buffer
-	var value = structPtrSlice{
+	value := structPtrSlice{
 		&structSliceElem{1, 1, 1},
 		&structSliceElem{2, 2, 2},
 		&structSliceElem{3, 3, 3},

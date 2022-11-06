@@ -22,9 +22,9 @@ import (
 	"testing"
 
 	"github.com/VictoriaMetrics/fastcache"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethdb/memorydb"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/ethdb/memorydb"
 )
 
 func copyDestructs(destructs map[common.Hash]struct{}) map[common.Hash]struct{} {
@@ -123,9 +123,7 @@ func TestMergeBasics(t *testing.T) {
 
 // TestMergeDelete tests some deletion
 func TestMergeDelete(t *testing.T) {
-	var (
-		storage = make(map[common.Hash]map[common.Hash][]byte)
-	)
+	storage := make(map[common.Hash]map[common.Hash][]byte)
 	// Fill up a parent
 	h1 := common.HexToHash("0x01")
 	h2 := common.HexToHash("0x02")

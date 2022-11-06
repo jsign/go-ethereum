@@ -22,12 +22,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/les/utils"
+	"github.com/jsign/go-ethereum/les/utils"
 )
 
 func TestTransition(t *testing.T) {
-	var epsilon = 0.01
-	var cases = []time.Duration{
+	epsilon := 0.01
+	cases := []time.Duration{
 		time.Millisecond, minResponseTime,
 		time.Second, time.Second * 5, maxResponseTime,
 	}

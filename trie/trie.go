@@ -22,9 +22,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/log"
 )
 
 var (
@@ -105,7 +105,7 @@ func New(id *ID, db NodeReader) (*Trie, error) {
 	trie := &Trie{
 		owner:  id.Owner,
 		reader: reader,
-		//tracer: newTracer(),
+		// tracer: newTracer(),
 	}
 	if id.Root != (common.Hash{}) && id.Root != emptyRoot {
 		rootnode, err := trie.resolveAndTrack(id.Root[:], nil)

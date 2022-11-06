@@ -27,9 +27,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/enr"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/p2p/enode"
+	"github.com/jsign/go-ethereum/p2p/enr"
+	"github.com/jsign/go-ethereum/rlp"
 	"github.com/urfave/cli/v2"
 )
 
@@ -100,7 +100,7 @@ func dumpNodeURL(out io.Writer, n *enode.Node) {
 func dumpRecordKV(kv []interface{}, indent int) string {
 	// Determine the longest key name for alignment.
 	var out string
-	var longestKey = 0
+	longestKey := 0
 	for i := 0; i < len(kv); i += 2 {
 		key := kv[i].(string)
 		if len(key) > longestKey {

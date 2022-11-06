@@ -25,17 +25,17 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/accounts/scwallet"
-	"github.com/ethereum/go-ethereum/accounts/usbwallet"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/internal/ethapi"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/ethereum/go-ethereum/signer/core/apitypes"
-	"github.com/ethereum/go-ethereum/signer/storage"
+	"github.com/jsign/go-ethereum/accounts"
+	"github.com/jsign/go-ethereum/accounts/keystore"
+	"github.com/jsign/go-ethereum/accounts/scwallet"
+	"github.com/jsign/go-ethereum/accounts/usbwallet"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/hexutil"
+	"github.com/jsign/go-ethereum/internal/ethapi"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/rpc"
+	"github.com/jsign/go-ethereum/signer/core/apitypes"
+	"github.com/jsign/go-ethereum/signer/storage"
 )
 
 const (
@@ -229,7 +229,7 @@ type (
 	}
 	// SignTxResponse result from SignTxRequest
 	SignTxResponse struct {
-		//The UI may make changes to the TX
+		// The UI may make changes to the TX
 		Transaction apitypes.SendTxArgs `json:"transaction"`
 		Approved    bool                `json:"approved"`
 	}
@@ -291,6 +291,7 @@ func NewSignerAPI(am *accounts.Manager, chainID int64, noUSB bool, ui UIClientAP
 	}
 	return signer
 }
+
 func (api *SignerAPI) openTrezor(url accounts.URL) {
 	resp, err := api.UI.OnInputRequired(UserInputRequest{
 		Prompt: "Pin required to open Trezor wallet\n" +
@@ -353,7 +354,7 @@ func (api *SignerAPI) derivationLoop(events chan accounts.WalletEvent) {
 		case accounts.WalletOpened:
 			status, _ := event.Wallet.Status()
 			log.Info("New wallet appeared", "url", event.Wallet.URL(), "status", status)
-			var derive = func(limit int, next func() accounts.DerivationPath) {
+			derive := func(limit int, next func() accounts.DerivationPath) {
 				// Derive first N accounts, hardcoded for now
 				for i := 0; i < limit; i++ {
 					path := next()
@@ -387,7 +388,7 @@ func (api *SignerAPI) derivationLoop(events chan accounts.WalletEvent) {
 // List returns the set of wallet this signer manages. Each wallet can contain
 // multiple accounts.
 func (api *SignerAPI) List(ctx context.Context) ([]common.Address, error) {
-	var accs = make([]accounts.Account, 0)
+	accs := make([]accounts.Account, 0)
 	// accs is initialized as empty list, not nil. We use 'nil' to signal
 	// rejection, as opposed to an empty list.
 	for _, wallet := range api.am.Wallets() {
@@ -434,7 +435,8 @@ func (api *SignerAPI) newAccount() (common.Address, error) {
 		resp, err := api.UI.OnInputRequired(UserInputRequest{
 			"New account password",
 			fmt.Sprintf("Please enter a password for the new account to be created (attempt %d of 3)", i),
-			true})
+			true,
+		})
 		if err != nil {
 			log.Warn("error obtaining password", "attempt", i, "error", err)
 			continue
@@ -458,7 +460,7 @@ func (api *SignerAPI) newAccount() (common.Address, error) {
 // it also returns 'true' if the transaction was modified, to make it possible to configure the signer not to allow
 // UI-modifications to requests
 func logDiff(original *SignTxRequest, new *SignTxResponse) bool {
-	var intPtrModified = func(a, b *hexutil.Big) bool {
+	intPtrModified := func(a, b *hexutil.Big) bool {
 		aBig := (*big.Int)(a)
 		bBig := (*big.Int)(b)
 		if aBig != nil && bBig != nil {
@@ -587,7 +589,7 @@ func (api *SignerAPI) SignTransaction(ctx context.Context, args apitypes.SendTxA
 		return nil, err
 	}
 	// Convert fields into a real transaction
-	var unsignedTx = result.Transaction.ToTransaction()
+	unsignedTx := result.Transaction.ToTransaction()
 	// Get the password for the transaction
 	pw, err := api.lookupOrQueryPassword(acc.Address, "Account password",
 		fmt.Sprintf("Please enter the password for account %s", acc.Address.String()))

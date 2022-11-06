@@ -23,9 +23,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/jsign/go-ethereum/accounts"
+	"github.com/jsign/go-ethereum/event"
+	"github.com/jsign/go-ethereum/log"
 	"github.com/karalabe/usb"
 )
 
@@ -71,7 +71,6 @@ type Hub struct {
 // NewLedgerHub creates a new hardware wallet manager for Ledger devices.
 func NewLedgerHub() (*Hub, error) {
 	return newHub(LedgerScheme, 0x2c97, []uint16{
-
 		// Device definitions taken from
 		// https://github.com/LedgerHQ/ledger-live/blob/38012bc8899e0f07149ea9cfe7e64b2c146bc92b/libs/ledgerjs/packages/devices/src/index.ts
 

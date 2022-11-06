@@ -23,27 +23,27 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus/ethash"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/eth/protocols/snap"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rlp"
 	fuzz "github.com/google/gofuzz"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/consensus/ethash"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/core/vm"
+	"github.com/jsign/go-ethereum/eth/protocols/snap"
+	"github.com/jsign/go-ethereum/p2p"
+	"github.com/jsign/go-ethereum/p2p/enode"
+	"github.com/jsign/go-ethereum/params"
+	"github.com/jsign/go-ethereum/rlp"
 )
 
 var trieRoot common.Hash
 
 func getChain() *core.BlockChain {
 	ga := make(core.GenesisAlloc, 1000)
-	var a = make([]byte, 20)
-	var mkStorage = func(k, v int) (common.Hash, common.Hash) {
-		var kB = make([]byte, 32)
-		var vB = make([]byte, 32)
+	a := make([]byte, 20)
+	mkStorage := func(k, v int) (common.Hash, common.Hash) {
+		kB := make([]byte, 32)
+		vB := make([]byte, 32)
 		binary.LittleEndian.PutUint64(kB, uint64(k))
 		binary.LittleEndian.PutUint64(vB, uint64(v))
 		return common.BytesToHash(kB), common.BytesToHash(vB)
@@ -150,12 +150,15 @@ func doFuzz(input []byte, obj interface{}, code int) int {
 func FuzzARange(input []byte) int {
 	return doFuzz(input, &snap.GetAccountRangePacket{}, snap.GetAccountRangeMsg)
 }
+
 func FuzzSRange(input []byte) int {
 	return doFuzz(input, &snap.GetStorageRangesPacket{}, snap.GetStorageRangesMsg)
 }
+
 func FuzzByteCodes(input []byte) int {
 	return doFuzz(input, &snap.GetByteCodesPacket{}, snap.GetByteCodesMsg)
 }
+
 func FuzzTrieNodes(input []byte) int {
 	return doFuzz(input, &snap.GetTrieNodesPacket{}, snap.GetTrieNodesMsg)
 }

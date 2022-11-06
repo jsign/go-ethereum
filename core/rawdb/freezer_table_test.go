@@ -30,7 +30,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/ethereum/go-ethereum/metrics"
+	"github.com/jsign/go-ethereum/metrics"
 	"github.com/stretchr/testify/require"
 )
 
@@ -151,7 +151,7 @@ func TestFreezerRepairDanglingHead(t *testing.T) {
 	}
 
 	// open the index
-	idxFile, err := os.OpenFile(filepath.Join(os.TempDir(), fmt.Sprintf("%s.ridx", fname)), os.O_RDWR, 0644)
+	idxFile, err := os.OpenFile(filepath.Join(os.TempDir(), fmt.Sprintf("%s.ridx", fname)), os.O_RDWR, 0o644)
 	if err != nil {
 		t.Fatalf("Failed to open index file: %v", err)
 	}
@@ -203,7 +203,7 @@ func TestFreezerRepairDanglingHeadLarge(t *testing.T) {
 	}
 
 	// open the index
-	idxFile, err := os.OpenFile(filepath.Join(os.TempDir(), fmt.Sprintf("%s.ridx", fname)), os.O_RDWR, 0644)
+	idxFile, err := os.OpenFile(filepath.Join(os.TempDir(), fmt.Sprintf("%s.ridx", fname)), os.O_RDWR, 0o644)
 	if err != nil {
 		t.Fatalf("Failed to open index file: %v", err)
 	}
@@ -337,7 +337,7 @@ func TestFreezerRepairDanglingIndex(t *testing.T) {
 		if err := assertFileSize(fileToCrop, 45); err != nil {
 			t.Fatal(err)
 		}
-		file, err := os.OpenFile(fileToCrop, os.O_RDWR, 0644)
+		file, err := os.OpenFile(fileToCrop, os.O_RDWR, 0o644)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -435,7 +435,7 @@ func TestFreezerRepairFirstFile(t *testing.T) {
 		if err := assertFileSize(fileToCrop, 40); err != nil {
 			t.Fatal(err)
 		}
-		file, err := os.OpenFile(fileToCrop, os.O_RDWR, 0644)
+		file, err := os.OpenFile(fileToCrop, os.O_RDWR, 0o644)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -560,7 +560,7 @@ func TestFreezerOffset(t *testing.T) {
 		}
 		// Read the index file
 		p := filepath.Join(os.TempDir(), fmt.Sprintf("%v.ridx", fname))
-		indexFile, err := os.OpenFile(p, os.O_RDWR, 0644)
+		indexFile, err := os.OpenFile(p, os.O_RDWR, 0o644)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -619,7 +619,7 @@ func TestFreezerOffset(t *testing.T) {
 	{
 		// Read the index file
 		p := filepath.Join(os.TempDir(), fmt.Sprintf("%v.ridx", fname))
-		indexFile, err := os.OpenFile(p, os.O_RDWR, 0644)
+		indexFile, err := os.OpenFile(p, os.O_RDWR, 0o644)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1141,7 +1141,7 @@ func (randTest) Generate(r *rand.Rand, size int) reflect.Value {
 
 		// addItems appends the given length items into the table.
 		addItems = func(n int) []uint64 {
-			var first = deleted
+			first := deleted
 			if len(items) != 0 {
 				first = items[len(items)-1] + 1
 			}

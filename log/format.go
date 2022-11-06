@@ -24,7 +24,7 @@ const (
 
 // locationTrims are trimmed for display to avoid unwieldy log lines.
 var locationTrims = []string{
-	"github.com/ethereum/go-ethereum/",
+	"github.com/jsign/go-ethereum/",
 }
 
 // PrintOrigins sets or unsets log location (file:line) printing for terminal
@@ -86,7 +86,7 @@ type TerminalStringer interface {
 //	[DBUG] [May 16 20:58:45] remove route ns=haproxy addr=127.0.0.1:50002
 func TerminalFormat(usecolor bool) Format {
 	return FormatFunc(func(r *Record) []byte {
-		var color = 0
+		color := 0
 		if usecolor {
 			switch r.Lvl {
 			case LvlCrit:

@@ -26,11 +26,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/params"
+	"github.com/jsign/go-ethereum/rlp"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -497,7 +497,7 @@ func TestAncientStorage(t *testing.T) {
 }
 
 func TestCanonicalHashIteration(t *testing.T) {
-	var cases = []struct {
+	cases := []struct {
 		from, to uint64
 		limit    int
 		expect   []uint64
@@ -591,7 +591,7 @@ func BenchmarkWriteAncientBlocks(b *testing.B) {
 	// The benchmark loop writes batches of blocks, but note that the total block count is
 	// b.N. This means the resulting ns/op measurement is the time it takes to write a
 	// single block and its associated data.
-	var td = big.NewInt(55)
+	td := big.NewInt(55)
 	var totalSize int64
 	for i := 0; i < b.N; i += batchSize {
 		length := batchSize

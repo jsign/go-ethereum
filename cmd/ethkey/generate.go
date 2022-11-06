@@ -22,10 +22,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/google/uuid"
+	"github.com/jsign/go-ethereum/accounts/keystore"
+	"github.com/jsign/go-ethereum/cmd/utils"
+	"github.com/jsign/go-ethereum/crypto"
 	"github.com/urfave/cli/v2"
 )
 
@@ -112,10 +112,10 @@ If you want to encrypt an existing private key, it can be specified by setting
 		}
 
 		// Store the file to disk.
-		if err := os.MkdirAll(filepath.Dir(keyfilepath), 0700); err != nil {
+		if err := os.MkdirAll(filepath.Dir(keyfilepath), 0o700); err != nil {
 			utils.Fatalf("Could not create directory %s", filepath.Dir(keyfilepath))
 		}
-		if err := os.WriteFile(keyfilepath, keyjson, 0600); err != nil {
+		if err := os.WriteFile(keyfilepath, keyjson, 0o600); err != nil {
 			utils.Fatalf("Failed to write keyfile to %s: %v", keyfilepath, err)
 		}
 

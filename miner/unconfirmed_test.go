@@ -19,7 +19,7 @@ package miner
 import (
 	"testing"
 
-	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/core/types"
 )
 
 // noopChainRetriever is an implementation of headerRetriever that always
@@ -29,6 +29,7 @@ type noopChainRetriever struct{}
 func (r *noopChainRetriever) GetHeaderByNumber(number uint64) *types.Header {
 	return nil
 }
+
 func (r *noopChainRetriever) GetBlockByNumber(number uint64) *types.Block {
 	return nil
 }

@@ -29,13 +29,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/simulations/adapters"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/jsign/go-ethereum/event"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/node"
+	"github.com/jsign/go-ethereum/p2p"
+	"github.com/jsign/go-ethereum/p2p/enode"
+	"github.com/jsign/go-ethereum/p2p/simulations/adapters"
+	"github.com/jsign/go-ethereum/rpc"
 	"github.com/mattn/go-colorable"
 )
 
@@ -204,6 +204,7 @@ func (t *testService) RunDum(p *p2p.Peer, rw p2p.MsgReadWriter) error {
 		}
 	}
 }
+
 func (t *testService) RunPrb(p *p2p.Peer, rw p2p.MsgReadWriter) error {
 	peer := t.peer(p.ID())
 
@@ -596,7 +597,7 @@ func TestHTTPSnapshot(t *testing.T) {
 	network, s := testHTTPServer(t)
 	defer s.Close()
 
-	var eventsDone = make(chan struct{}, 1)
+	eventsDone := make(chan struct{}, 1)
 	count := 1
 	eventsDoneChan := make(chan *Event)
 	eventSub := network.Events().Subscribe(eventsDoneChan)

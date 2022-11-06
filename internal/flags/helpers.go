@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/internal/version"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/jsign/go-ethereum/internal/version"
+	"github.com/jsign/go-ethereum/params"
 	"github.com/urfave/cli/v2"
 )
 
@@ -96,7 +96,7 @@ func MigrateGlobalFlags(ctx *cli.Context) {
 func doMigrateFlags(ctx *cli.Context) {
 	// Figure out if there are any aliases of commands. If there are, we want
 	// to ignore them when iterating over the flags.
-	var aliases = make(map[string]bool)
+	aliases := make(map[string]bool)
 	for _, fl := range ctx.Command.Flags {
 		for _, alias := range fl.Names()[1:] {
 			aliases[alias] = true

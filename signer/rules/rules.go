@@ -23,11 +23,11 @@ import (
 	"strings"
 
 	"github.com/dop251/goja"
-	"github.com/ethereum/go-ethereum/internal/ethapi"
-	"github.com/ethereum/go-ethereum/internal/jsre/deps"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/signer/core"
-	"github.com/ethereum/go-ethereum/signer/storage"
+	"github.com/jsign/go-ethereum/internal/ethapi"
+	"github.com/jsign/go-ethereum/internal/jsre/deps"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/signer/core"
+	"github.com/jsign/go-ethereum/signer/storage"
 )
 
 // consoleOutput is an override for the console.log and console.error methods to
@@ -58,6 +58,7 @@ func NewRuleEvaluator(next core.UIClientAPI, jsbackend storage.Storage) (*rulese
 
 	return c, nil
 }
+
 func (r *rulesetUI) RegisterUIServer(api *core.UIServerAPI) {
 	r.next.RegisterUIServer(api)
 	// TODO, make it possible to query from js
@@ -67,6 +68,7 @@ func (r *rulesetUI) Init(javascriptRules string) error {
 	r.jsRules = javascriptRules
 	return nil
 }
+
 func (r *rulesetUI) execute(jsfunc string, jsarg interface{}) (goja.Value, error) {
 	// Instantiate a fresh vm engine every time
 	vm := goja.New()
@@ -160,7 +162,8 @@ func (r *rulesetUI) ApproveTx(request *core.SignTxRequest) (core.SignTxResponse,
 	if approved {
 		return core.SignTxResponse{
 				Transaction: request.Transaction,
-				Approved:    true},
+				Approved:    true,
+			},
 			nil
 	}
 	return core.SignTxResponse{Approved: false}, err

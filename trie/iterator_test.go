@@ -23,11 +23,11 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/ethdb/memorydb"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/ethdb/memorydb"
 )
 
 func TestEmptyIterator(t *testing.T) {
@@ -413,6 +413,7 @@ func testIteratorContinueAfterError(t *testing.T, memonly bool) {
 func TestIteratorContinueAfterSeekErrorDisk(t *testing.T) {
 	testIteratorContinueAfterSeekError(t, false)
 }
+
 func TestIteratorContinueAfterSeekErrorMemonly(t *testing.T) {
 	testIteratorContinueAfterSeekError(t, true)
 }

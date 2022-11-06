@@ -29,10 +29,10 @@ import (
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/crypto/ecies"
-	"github.com/ethereum/go-ethereum/p2p/simulations/pipes"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/crypto/ecies"
+	"github.com/jsign/go-ethereum/p2p/simulations/pipes"
+	"github.com/jsign/go-ethereum/rlp"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -368,7 +368,7 @@ func TestHandshakeForwardCompatibility(t *testing.T) {
 }
 
 func BenchmarkHandshakeRead(b *testing.B) {
-	var input = unhex(eip8HandshakeAuthTests[0].input)
+	input := unhex(eip8HandshakeAuthTests[0].input)
 
 	for i := 0; i < b.N; i++ {
 		var (

@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/jsign/go-ethereum/accounts"
+	"github.com/jsign/go-ethereum/accounts/keystore"
+	"github.com/jsign/go-ethereum/cmd/utils"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/log"
 	"github.com/urfave/cli/v2"
 )
 
@@ -41,7 +41,6 @@ It can be used non-interactively with the --password option taking a
 passwordfile as argument containing the wallet password in plaintext.`,
 		Subcommands: []*cli.Command{
 			{
-
 				Name:      "import",
 				Usage:     "Import Ethereum presale wallet",
 				ArgsUsage: "<keyFile>",
@@ -280,7 +279,6 @@ func accountCreate(ctx *cli.Context) error {
 	password := utils.GetPassPhraseWithList("Your new account is locked with a password. Please give a password. Do not forget this password.", true, 0, utils.MakePasswordList(ctx))
 
 	account, err := keystore.StoreKey(keydir, password, scryptN, scryptP)
-
 	if err != nil {
 		utils.Fatalf("Failed to create account: %v", err)
 	}

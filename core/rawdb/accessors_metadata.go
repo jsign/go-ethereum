@@ -20,11 +20,11 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/params"
+	"github.com/jsign/go-ethereum/rlp"
 )
 
 // ReadDatabaseVersion retrieves the version number of the database.
@@ -116,8 +116,8 @@ func PushUncleanShutdownMarker(db ethdb.KeyValueStore) ([]uint64, uint64, error)
 	} else if err := rlp.DecodeBytes(data, &uncleanShutdowns); err != nil {
 		return nil, 0, err
 	}
-	var discarded = uncleanShutdowns.Discarded
-	var previous = make([]uint64, len(uncleanShutdowns.Recent))
+	discarded := uncleanShutdowns.Discarded
+	previous := make([]uint64, len(uncleanShutdowns.Recent))
 	copy(previous, uncleanShutdowns.Recent)
 	// Add a new (but cap it)
 	uncleanShutdowns.Recent = append(uncleanShutdowns.Recent, uint64(time.Now().Unix()))

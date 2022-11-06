@@ -41,11 +41,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/log"
 	pcsc "github.com/gballet/go-libpcsclite"
+	"github.com/jsign/go-ethereum/accounts"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/event"
+	"github.com/jsign/go-ethereum/log"
 )
 
 // Scheme is the URI prefix for smartcard wallets.
@@ -112,7 +112,7 @@ func (hub *Hub) readPairings() error {
 }
 
 func (hub *Hub) writePairings() error {
-	pairingFile, err := os.OpenFile(filepath.Join(hub.datadir, "smartcards.json"), os.O_RDWR|os.O_CREATE, 0755)
+	pairingFile, err := os.OpenFile(filepath.Join(hub.datadir, "smartcards.json"), os.O_RDWR|os.O_CREATE, 0o755)
 	if err != nil {
 		return err
 	}

@@ -49,7 +49,7 @@ func TestAccountListEmpty(t *testing.T) {
 
 func TestAccountList(t *testing.T) {
 	datadir := tmpDatadirWithKeystore(t)
-	var want = `
+	want := `
 Account #0: {7ef5a6135f1fd6a02593eedc869c6d41d934aef8} keystore://{{.Datadir}}/keystore/UTC--2016-03-22T12-57-55.920751759Z--7ef5a6135f1fd6a02593eedc869c6d41d934aef8
 Account #1: {f466859ead1932d743d622cb74fc058882e8648a} keystore://{{.Datadir}}/keystore/aaa
 Account #2: {289d485d9771714cce91d3393d764e1311907acc} keystore://{{.Datadir}}/keystore/zzz
@@ -134,11 +134,11 @@ func TestAccountHelp(t *testing.T) {
 func importAccountWithExpect(t *testing.T, key string, expected string) {
 	dir := t.TempDir()
 	keyfile := filepath.Join(dir, "key.prv")
-	if err := os.WriteFile(keyfile, []byte(key), 0600); err != nil {
+	if err := os.WriteFile(keyfile, []byte(key), 0o600); err != nil {
 		t.Error(err)
 	}
 	passwordFile := filepath.Join(dir, "password.txt")
-	if err := os.WriteFile(passwordFile, []byte("foobar"), 0600); err != nil {
+	if err := os.WriteFile(passwordFile, []byte("foobar"), 0o600); err != nil {
 		t.Error(err)
 	}
 	geth := runGeth(t, "--lightkdf", "account", "import", "-password", passwordFile, keyfile)
@@ -238,7 +238,7 @@ Fatal: Failed to unlock account f466859ead1932d743d622cb74fc058882e8648a (could 
 `)
 }
 
-// https://github.com/ethereum/go-ethereum/issues/1785
+// https://github.com/jsign/go-ethereum/issues/1785
 func TestUnlockFlagMultiIndex(t *testing.T) {
 	geth := runMinimalGeth(t, "--port", "0", "--ipcdisable", "--datadir", tmpDatadirWithKeystore(t),
 		"--unlock", "f466859ead1932d743d622cb74fc058882e8648a", "--unlock", "0,2", "console", "--exec", "loadScript('testdata/empty.js')")

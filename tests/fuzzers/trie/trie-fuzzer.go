@@ -21,8 +21,8 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/ethdb/memorydb"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum/ethdb/memorydb"
+	"github.com/jsign/go-ethereum/trie"
 )
 
 // randTest performs random trie operations.
@@ -67,6 +67,7 @@ func newDataSource(input []byte) *dataSource {
 		input, bytes.NewReader(input),
 	}
 }
+
 func (ds *dataSource) readByte() byte {
 	if b, err := ds.reader.ReadByte(); err != nil {
 		return 0
@@ -74,9 +75,11 @@ func (ds *dataSource) readByte() byte {
 		return b
 	}
 }
+
 func (ds *dataSource) Read(buf []byte) (int, error) {
 	return ds.reader.Read(buf)
 }
+
 func (ds *dataSource) Ended() bool {
 	return ds.reader.Len() == 0
 }

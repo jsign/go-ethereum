@@ -22,11 +22,11 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/accounts/abi"
+	"github.com/jsign/go-ethereum/accounts/abi/bind"
+	"github.com/jsign/go-ethereum/accounts/keystore"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core/types"
 )
 
 // Signer is an interface defining the callback when a contract requires a
@@ -105,8 +105,7 @@ func (opts *TransactOpts) GetGasLimit() int64   { return int64(opts.opts.GasLimi
 
 // GetContext cannot be reliably implemented without identity preservation (https://github.com/golang/go/issues/16876)
 // Even then it's awkward to unpack the subtleties of a Go context out to Java.
-//func (opts *TransactOpts) GetContext() *Context { return &Context{opts.opts.Context} }
-
+// func (opts *TransactOpts) GetContext() *Context { return &Context{opts.opts.Context} }
 func (opts *TransactOpts) SetFrom(from *Address) { opts.opts.From = from.address }
 func (opts *TransactOpts) SetNonce(nonce int64)  { opts.opts.Nonce = big.NewInt(nonce) }
 func (opts *TransactOpts) SetSigner(s Signer) {

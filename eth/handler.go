@@ -24,21 +24,21 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus"
-	"github.com/ethereum/go-ethereum/consensus/beacon"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/forkid"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/eth/downloader"
-	"github.com/ethereum/go-ethereum/eth/fetcher"
-	"github.com/ethereum/go-ethereum/eth/protocols/eth"
-	"github.com/ethereum/go-ethereum/eth/protocols/snap"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/consensus"
+	"github.com/jsign/go-ethereum/consensus/beacon"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/core/forkid"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/eth/downloader"
+	"github.com/jsign/go-ethereum/eth/fetcher"
+	"github.com/jsign/go-ethereum/eth/protocols/eth"
+	"github.com/jsign/go-ethereum/eth/protocols/snap"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/event"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/p2p"
+	"github.com/jsign/go-ethereum/params"
 )
 
 const (
@@ -47,9 +47,7 @@ const (
 	txChanSize = 4096
 )
 
-var (
-	syncChallengeTimeout = 15 * time.Second // Time allowance for a node to reply to the sync progress challenge
-)
+var syncChallengeTimeout = 15 * time.Second // Time allowance for a node to reply to the sync progress challenge
 
 // txPool defines the methods needed from a transaction pool implementation to
 // support all the operations needed by the Ethereum chain protocols.

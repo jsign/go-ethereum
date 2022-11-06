@@ -22,7 +22,7 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common"
 )
 
 // Interface represents a wrapped version of Go's interface{}, with the capacity
@@ -63,6 +63,7 @@ func (i *Interface) SetInt8s(bigints *BigInts) {
 	}
 	i.object = &ints
 }
+
 func (i *Interface) SetInt16s(bigints *BigInts) {
 	ints := make([]int16, 0, bigints.Size())
 	for _, bi := range bigints.bigints {
@@ -70,6 +71,7 @@ func (i *Interface) SetInt16s(bigints *BigInts) {
 	}
 	i.object = &ints
 }
+
 func (i *Interface) SetInt32s(bigints *BigInts) {
 	ints := make([]int32, 0, bigints.Size())
 	for _, bi := range bigints.bigints {
@@ -77,6 +79,7 @@ func (i *Interface) SetInt32s(bigints *BigInts) {
 	}
 	i.object = &ints
 }
+
 func (i *Interface) SetInt64s(bigints *BigInts) {
 	ints := make([]int64, 0, bigints.Size())
 	for _, bi := range bigints.bigints {
@@ -95,6 +98,7 @@ func (i *Interface) SetUint8s(bigints *BigInts) {
 	}
 	i.object = &ints
 }
+
 func (i *Interface) SetUint16s(bigints *BigInts) {
 	ints := make([]uint16, 0, bigints.Size())
 	for _, bi := range bigints.bigints {
@@ -102,6 +106,7 @@ func (i *Interface) SetUint16s(bigints *BigInts) {
 	}
 	i.object = &ints
 }
+
 func (i *Interface) SetUint32s(bigints *BigInts) {
 	ints := make([]uint32, 0, bigints.Size())
 	for _, bi := range bigints.bigints {
@@ -109,6 +114,7 @@ func (i *Interface) SetUint32s(bigints *BigInts) {
 	}
 	i.object = &ints
 }
+
 func (i *Interface) SetUint64s(bigints *BigInts) {
 	ints := make([]uint64, 0, bigints.Size())
 	for _, bi := range bigints.bigints {
@@ -170,6 +176,7 @@ func (i *Interface) GetInt8s() *BigInts {
 	}
 	return bigints
 }
+
 func (i *Interface) GetInt16s() *BigInts {
 	val := i.object.(*[]int16)
 	bigints := NewBigInts(len(*val))
@@ -178,6 +185,7 @@ func (i *Interface) GetInt16s() *BigInts {
 	}
 	return bigints
 }
+
 func (i *Interface) GetInt32s() *BigInts {
 	val := i.object.(*[]int32)
 	bigints := NewBigInts(len(*val))
@@ -186,6 +194,7 @@ func (i *Interface) GetInt32s() *BigInts {
 	}
 	return bigints
 }
+
 func (i *Interface) GetInt64s() *BigInts {
 	val := i.object.(*[]int64)
 	bigints := NewBigInts(len(*val))
@@ -194,18 +203,23 @@ func (i *Interface) GetInt64s() *BigInts {
 	}
 	return bigints
 }
+
 func (i *Interface) GetUint8() *BigInt {
 	return &BigInt{new(big.Int).SetUint64(uint64(*i.object.(*uint8)))}
 }
+
 func (i *Interface) GetUint16() *BigInt {
 	return &BigInt{new(big.Int).SetUint64(uint64(*i.object.(*uint16)))}
 }
+
 func (i *Interface) GetUint32() *BigInt {
 	return &BigInt{new(big.Int).SetUint64(uint64(*i.object.(*uint32)))}
 }
+
 func (i *Interface) GetUint64() *BigInt {
 	return &BigInt{new(big.Int).SetUint64(*i.object.(*uint64))}
 }
+
 func (i *Interface) GetUint8s() *BigInts {
 	val := i.object.(*[]uint8)
 	bigints := NewBigInts(len(*val))
@@ -214,6 +228,7 @@ func (i *Interface) GetUint8s() *BigInts {
 	}
 	return bigints
 }
+
 func (i *Interface) GetUint16s() *BigInts {
 	val := i.object.(*[]uint16)
 	bigints := NewBigInts(len(*val))
@@ -222,6 +237,7 @@ func (i *Interface) GetUint16s() *BigInts {
 	}
 	return bigints
 }
+
 func (i *Interface) GetUint32s() *BigInts {
 	val := i.object.(*[]uint32)
 	bigints := NewBigInts(len(*val))
@@ -230,6 +246,7 @@ func (i *Interface) GetUint32s() *BigInts {
 	}
 	return bigints
 }
+
 func (i *Interface) GetUint64s() *BigInts {
 	val := i.object.(*[]uint64)
 	bigints := NewBigInts(len(*val))

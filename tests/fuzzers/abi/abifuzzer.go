@@ -21,8 +21,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	fuzz "github.com/google/gofuzz"
+	"github.com/jsign/go-ethereum/accounts/abi"
 )
 
 var (
@@ -33,7 +33,8 @@ var (
 	payables         = []*string{&pays[0], &pays[1]}
 	vNames           = []string{"a", "b", "c", "d", "e", "f", "g"}
 	varNames         = append(vNames, names...)
-	varTypes         = []string{"bool", "address", "bytes", "string",
+	varTypes         = []string{
+		"bool", "address", "bytes", "string",
 		"uint8", "int8", "uint8", "int8", "uint16", "int16",
 		"uint24", "int24", "uint32", "int32", "uint40", "int40", "uint48", "int48", "uint56", "int56",
 		"uint64", "int64", "uint72", "int72", "uint80", "int80", "uint88", "int88", "uint96", "int96",
@@ -44,7 +45,8 @@ var (
 		"bytes1", "bytes2", "bytes3", "bytes4", "bytes5", "bytes6", "bytes7", "bytes8", "bytes9", "bytes10", "bytes11",
 		"bytes12", "bytes13", "bytes14", "bytes15", "bytes16", "bytes17", "bytes18", "bytes19", "bytes20", "bytes21",
 		"bytes22", "bytes23", "bytes24", "bytes25", "bytes26", "bytes27", "bytes28", "bytes29", "bytes30", "bytes31",
-		"bytes32", "bytes"}
+		"bytes32", "bytes",
+	}
 )
 
 func unpackPack(abi abi.ABI, method string, input []byte) ([]interface{}, bool) {

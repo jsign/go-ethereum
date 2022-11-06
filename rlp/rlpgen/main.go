@@ -27,7 +27,7 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-const pathOfPackageRLP = "github.com/ethereum/go-ethereum/rlp"
+const pathOfPackageRLP = "github.com/jsign/go-ethereum/rlp"
 
 func main() {
 	var (
@@ -51,7 +51,7 @@ func main() {
 	}
 	if *output == "-" {
 		os.Stdout.Write(code)
-	} else if err := os.WriteFile(*output, code, 0600); err != nil {
+	} else if err := os.WriteFile(*output, code, 0o600); err != nil {
 		fatal(err)
 	}
 }

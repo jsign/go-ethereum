@@ -27,10 +27,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/event"
+	"github.com/jsign/go-ethereum/accounts"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/event"
 )
 
 var testSigData = make([]byte, 32)
@@ -49,8 +49,8 @@ func TestKeyStore(t *testing.T) {
 	if err != nil {
 		t.Fatalf("account file %s doesn't exist (%v)", a.URL, err)
 	}
-	if runtime.GOOS != "windows" && stat.Mode() != 0600 {
-		t.Fatalf("account file has wrong mode: got %o, want %o", stat.Mode(), 0600)
+	if runtime.GOOS != "windows" && stat.Mode() != 0o600 {
+		t.Fatalf("account file has wrong mode: got %o, want %o", stat.Mode(), 0o600)
 	}
 	if !ks.HasAddress(a.Address) {
 		t.Errorf("HasAccount(%x) should've returned true", a.Address)

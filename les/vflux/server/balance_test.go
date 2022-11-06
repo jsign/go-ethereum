@@ -23,13 +23,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common/mclock"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/ethdb/memorydb"
-	"github.com/ethereum/go-ethereum/les/utils"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/enr"
-	"github.com/ethereum/go-ethereum/p2p/nodestate"
+	"github.com/jsign/go-ethereum/common/mclock"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/ethdb/memorydb"
+	"github.com/jsign/go-ethereum/les/utils"
+	"github.com/jsign/go-ethereum/p2p/enode"
+	"github.com/jsign/go-ethereum/p2p/enr"
+	"github.com/jsign/go-ethereum/p2p/nodestate"
 )
 
 type zeroExpirer struct{}
@@ -111,7 +111,7 @@ func TestAddBalance(t *testing.T) {
 	defer b.stop()
 
 	node := b.newNode(1000)
-	var inputs = []struct {
+	inputs := []struct {
 		delta     int64
 		expect    [2]uint64
 		total     uint64
@@ -147,7 +147,7 @@ func TestSetBalance(t *testing.T) {
 	defer b.stop()
 	node := b.newNode(1000)
 
-	var inputs = []struct {
+	inputs := []struct {
 		pos, neg uint64
 	}{
 		{1000, 0},
@@ -174,7 +174,7 @@ func TestBalanceTimeCost(t *testing.T) {
 	node.SetPriceFactors(PriceFactors{1, 0, 1}, PriceFactors{1, 0, 1})
 	b.setBalance(node, uint64(time.Minute), 0) // 1 minute time allowance
 
-	var inputs = []struct {
+	inputs := []struct {
 		runTime time.Duration
 		expPos  uint64
 		expNeg  uint64
@@ -213,7 +213,7 @@ func TestBalanceReqCost(t *testing.T) {
 	node.SetPriceFactors(PriceFactors{1, 0, 1}, PriceFactors{1, 0, 1})
 
 	b.setBalance(node, uint64(time.Minute), 0) // 1 minute time serving time allowance
-	var inputs = []struct {
+	inputs := []struct {
 		reqCost uint64
 		expPos  uint64
 		expNeg  uint64
@@ -240,7 +240,7 @@ func TestBalanceToPriority(t *testing.T) {
 	node := b.newNode(1000)
 	node.SetPriceFactors(PriceFactors{1, 0, 1}, PriceFactors{1, 0, 1})
 
-	var inputs = []struct {
+	inputs := []struct {
 		pos      uint64
 		neg      uint64
 		priority int64
@@ -265,7 +265,7 @@ func TestEstimatedPriority(t *testing.T) {
 	node := b.newNode(1000000000)
 	node.SetPriceFactors(PriceFactors{1, 0, 1}, PriceFactors{1, 0, 1})
 	b.setBalance(node, uint64(time.Minute), 0)
-	var inputs = []struct {
+	inputs := []struct {
 		runTime    time.Duration // time cost
 		futureTime time.Duration // diff of future time
 		reqCost    uint64        // single request cost
@@ -345,7 +345,7 @@ func TestCallbackChecking(t *testing.T) {
 	node := b.newNode(1000000)
 	node.SetPriceFactors(PriceFactors{1, 0, 1}, PriceFactors{1, 0, 1})
 
-	var inputs = []struct {
+	inputs := []struct {
 		priority int64
 		expDiff  time.Duration
 	}{

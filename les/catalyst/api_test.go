@@ -20,18 +20,18 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus/ethash"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/beacon"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/eth/downloader"
-	"github.com/ethereum/go-ethereum/eth/ethconfig"
-	"github.com/ethereum/go-ethereum/les"
-	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/consensus/ethash"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/core/beacon"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/eth/downloader"
+	"github.com/jsign/go-ethereum/eth/ethconfig"
+	"github.com/jsign/go-ethereum/les"
+	"github.com/jsign/go-ethereum/node"
+	"github.com/jsign/go-ethereum/params"
+	"github.com/jsign/go-ethereum/trie"
 )
 
 var (
@@ -232,7 +232,7 @@ func startLesService(t *testing.T, genesis *core.Genesis, headers []*types.Heade
 }
 
 func encodeTransactions(txs []*types.Transaction) [][]byte {
-	var enc = make([][]byte, len(txs))
+	enc := make([][]byte, len(txs))
 	for i, tx := range txs {
 		enc[i], _ = tx.MarshalBinary()
 	}

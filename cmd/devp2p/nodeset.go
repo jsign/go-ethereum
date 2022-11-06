@@ -24,8 +24,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/p2p/enode"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/p2p/enode"
 )
 
 const jsonIndent = "    "
@@ -65,7 +65,7 @@ func writeNodesJSON(file string, nodes nodeSet) {
 		os.Stdout.Write(nodesJSON)
 		return
 	}
-	if err := os.WriteFile(file, nodesJSON, 0644); err != nil {
+	if err := os.WriteFile(file, nodesJSON, 0o644); err != nil {
 		exit(err)
 	}
 }

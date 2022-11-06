@@ -27,20 +27,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus/ethash"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/eth/protocols/eth"
-	"github.com/ethereum/go-ethereum/eth/protocols/snap"
-	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/consensus/ethash"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/core/vm"
+	"github.com/jsign/go-ethereum/eth/protocols/eth"
+	"github.com/jsign/go-ethereum/eth/protocols/snap"
+	"github.com/jsign/go-ethereum/event"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/params"
+	"github.com/jsign/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/trie"
 )
 
 // downloadTester is a test simulator for mocking out local block chain.
@@ -162,7 +162,7 @@ func (dlp *downloadTesterPeer) Head() (common.Hash, *big.Int) {
 }
 
 func unmarshalRlpHeaders(rlpdata []rlp.RawValue) []*types.Header {
-	var headers = make([]*types.Header, len(rlpdata))
+	headers := make([]*types.Header, len(rlpdata))
 	for i, data := range rlpdata {
 		var h types.Header
 		if err := rlp.DecodeBytes(data, &h); err != nil {
@@ -638,18 +638,23 @@ func testBoundedForkedSync(t *testing.T, protocol uint, mode SyncMode) {
 func TestBoundedHeavyForkedSync66Full(t *testing.T) {
 	testBoundedHeavyForkedSync(t, eth.ETH66, FullSync)
 }
+
 func TestBoundedHeavyForkedSync66Snap(t *testing.T) {
 	testBoundedHeavyForkedSync(t, eth.ETH66, SnapSync)
 }
+
 func TestBoundedHeavyForkedSync66Light(t *testing.T) {
 	testBoundedHeavyForkedSync(t, eth.ETH66, LightSync)
 }
+
 func TestBoundedHeavyForkedSync67Full(t *testing.T) {
 	testBoundedHeavyForkedSync(t, eth.ETH67, FullSync)
 }
+
 func TestBoundedHeavyForkedSync67Snap(t *testing.T) {
 	testBoundedHeavyForkedSync(t, eth.ETH67, SnapSync)
 }
+
 func TestBoundedHeavyForkedSync67Light(t *testing.T) {
 	testBoundedHeavyForkedSync(t, eth.ETH67, LightSync)
 }
@@ -962,18 +967,23 @@ func testInvalidHeaderRollback(t *testing.T, protocol uint, mode SyncMode) {
 func TestHighTDStarvationAttack66Full(t *testing.T) {
 	testHighTDStarvationAttack(t, eth.ETH66, FullSync)
 }
+
 func TestHighTDStarvationAttack66Snap(t *testing.T) {
 	testHighTDStarvationAttack(t, eth.ETH66, SnapSync)
 }
+
 func TestHighTDStarvationAttack66Light(t *testing.T) {
 	testHighTDStarvationAttack(t, eth.ETH66, LightSync)
 }
+
 func TestHighTDStarvationAttack67Full(t *testing.T) {
 	testHighTDStarvationAttack(t, eth.ETH67, FullSync)
 }
+
 func TestHighTDStarvationAttack67Snap(t *testing.T) {
 	testHighTDStarvationAttack(t, eth.ETH67, SnapSync)
 }
+
 func TestHighTDStarvationAttack67Light(t *testing.T) {
 	testHighTDStarvationAttack(t, eth.ETH67, LightSync)
 }
@@ -1339,33 +1349,41 @@ func TestRemoteHeaderRequestSpan(t *testing.T) {
 		expected     []int
 	}{
 		// Remote is way higher. We should ask for the remote head and go backwards
-		{1500, 1000,
+		{
+			1500, 1000,
 			[]int{1323, 1339, 1355, 1371, 1387, 1403, 1419, 1435, 1451, 1467, 1483, 1499},
 		},
-		{15000, 13006,
+		{
+			15000, 13006,
 			[]int{14823, 14839, 14855, 14871, 14887, 14903, 14919, 14935, 14951, 14967, 14983, 14999},
 		},
 		// Remote is pretty close to us. We don't have to fetch as many
-		{1200, 1150,
+		{
+			1200, 1150,
 			[]int{1149, 1154, 1159, 1164, 1169, 1174, 1179, 1184, 1189, 1194, 1199},
 		},
 		// Remote is equal to us (so on a fork with higher td)
 		// We should get the closest couple of ancestors
-		{1500, 1500,
+		{
+			1500, 1500,
 			[]int{1497, 1499},
 		},
 		// We're higher than the remote! Odd
-		{1000, 1500,
+		{
+			1000, 1500,
 			[]int{997, 999},
 		},
 		// Check some weird edgecases that it behaves somewhat rationally
-		{0, 1500,
+		{
+			0, 1500,
 			[]int{0, 2},
 		},
-		{6000000, 0,
+		{
+			6000000, 0,
 			[]int{5999823, 5999839, 5999855, 5999871, 5999887, 5999903, 5999919, 5999935, 5999951, 5999967, 5999983, 5999999},
 		},
-		{0, 0,
+		{
+			0, 0,
 			[]int{0, 2},
 		},
 	}
@@ -1451,9 +1469,9 @@ func TestBeaconSync66Full(t *testing.T) { testBeaconSync(t, eth.ETH66, FullSync)
 func TestBeaconSync66Snap(t *testing.T) { testBeaconSync(t, eth.ETH66, SnapSync) }
 
 func testBeaconSync(t *testing.T, protocol uint, mode SyncMode) {
-	//log.Root().SetHandler(log.LvlFilterHandler(log.LvlInfo, log.StreamHandler(os.Stderr, log.TerminalFormat(true))))
+	// log.Root().SetHandler(log.LvlFilterHandler(log.LvlInfo, log.StreamHandler(os.Stderr, log.TerminalFormat(true))))
 
-	var cases = []struct {
+	cases := []struct {
 		name  string // The name of testing scenario
 		local int    // The length of local chain(canonical chain assumed), 0 means genesis is the head
 	}{

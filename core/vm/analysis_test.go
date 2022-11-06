@@ -20,7 +20,7 @@ import (
 	"math/bits"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/crypto"
 )
 
 func TestJumpDestAnalysis(t *testing.T) {
@@ -71,6 +71,7 @@ func BenchmarkJumpdestAnalysis_1200k(bench *testing.B) {
 	}
 	bench.StopTimer()
 }
+
 func BenchmarkJumpdestHashing_1200k(bench *testing.B) {
 	// 4 ms
 	code := make([]byte, analysisCodeSize)

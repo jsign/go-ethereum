@@ -24,9 +24,9 @@ import (
 	"io"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/log"
 )
 
 var ErrCommitDisabled = errors.New("no database for committing")
@@ -146,7 +146,7 @@ func (st *StackTrie) unmarshalBinary(r io.Reader) error {
 	st.val = dec.Val
 	st.key = dec.Key
 
-	var hasChild = make([]byte, 1)
+	hasChild := make([]byte, 1)
 	for i := range st.children {
 		if _, err := r.Read(hasChild); err != nil {
 			return err

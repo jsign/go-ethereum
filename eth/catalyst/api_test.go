@@ -24,20 +24,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/consensus/ethash"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/beacon"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/eth"
-	"github.com/ethereum/go-ethereum/eth/downloader"
-	"github.com/ethereum/go-ethereum/eth/ethconfig"
-	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/hexutil"
+	"github.com/jsign/go-ethereum/consensus/ethash"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/core/beacon"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/eth"
+	"github.com/jsign/go-ethereum/eth/downloader"
+	"github.com/jsign/go-ethereum/eth/ethconfig"
+	"github.com/jsign/go-ethereum/node"
+	"github.com/jsign/go-ethereum/p2p"
+	"github.com/jsign/go-ethereum/params"
+	"github.com/jsign/go-ethereum/trie"
 )
 
 var (
@@ -322,9 +322,9 @@ func TestEth2NewBlock(t *testing.T) {
 	}
 
 	// Introduce fork chain
-	var (
-		head = ethservice.BlockChain().CurrentBlock().NumberU64()
-	)
+
+	head := ethservice.BlockChain().CurrentBlock().NumberU64()
+
 	parent = preMergeBlocks[len(preMergeBlocks)-1]
 	for i := 0; i < 10; i++ {
 		execData, err := assembleBlock(api, parent.Hash(), &beacon.PayloadAttributesV1{
@@ -415,7 +415,8 @@ func startEthService(t *testing.T, genesis *core.Genesis, blocks []*types.Block)
 			ListenAddr:  "0.0.0.0:0",
 			NoDiscovery: true,
 			MaxPeers:    25,
-		}})
+		},
+	})
 	if err != nil {
 		t.Fatal("can't create node:", err)
 	}
@@ -728,7 +729,7 @@ func setBlockhash(data *beacon.ExecutableDataV1) *beacon.ExecutableDataV1 {
 }
 
 func decodeTransactions(enc [][]byte) ([]*types.Transaction, error) {
-	var txs = make([]*types.Transaction, len(enc))
+	txs := make([]*types.Transaction, len(enc))
 	for i, encTx := range enc {
 		var tx types.Transaction
 		if err := tx.UnmarshalBinary(encTx); err != nil {
@@ -762,12 +763,12 @@ func TestTrickRemoteBlockCache(t *testing.T) {
 
 	var invalidChain []*beacon.ExecutableDataV1
 	// create a valid payload (P1)
-	//payload1 := getNewPayload(t, apiA, commonAncestor)
-	//invalidChain = append(invalidChain, payload1)
+	// payload1 := getNewPayload(t, apiA, commonAncestor)
+	// invalidChain = append(invalidChain, payload1)
 
 	// create an invalid payload2 (P2)
 	payload2 := getNewPayload(t, apiA, commonAncestor)
-	//payload2.ParentHash = payload1.BlockHash
+	// payload2.ParentHash = payload1.BlockHash
 	payload2.GasUsed += 1
 	payload2 = setBlockhash(payload2)
 	invalidChain = append(invalidChain, payload2)

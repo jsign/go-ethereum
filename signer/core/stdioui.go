@@ -19,9 +19,9 @@ package core
 import (
 	"context"
 
-	"github.com/ethereum/go-ethereum/internal/ethapi"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/jsign/go-ethereum/internal/ethapi"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/rpc"
 )
 
 type StdIOUI struct {
@@ -97,6 +97,7 @@ func (ui *StdIOUI) ShowInfo(message string) {
 		log.Info("Error calling 'ui_showInfo'", "exc", err.Error(), "msg", message)
 	}
 }
+
 func (ui *StdIOUI) OnApprovedTx(tx ethapi.SignTransactionResult) {
 	err := ui.notify("ui_onApprovedTx", tx)
 	if err != nil {
@@ -110,6 +111,7 @@ func (ui *StdIOUI) OnSignerStartup(info StartupInfo) {
 		log.Info("Error calling 'ui_onSignerStartup'", "exc", err.Error(), "info", info)
 	}
 }
+
 func (ui *StdIOUI) OnInputRequired(info UserInputRequest) (UserInputResponse, error) {
 	var result UserInputResponse
 	err := ui.dispatch("ui_onInputRequired", info, &result)

@@ -22,11 +22,13 @@ import (
 	"sync/atomic"
 
 	mapset "github.com/deckarep/golang-set"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/jsign/go-ethereum/log"
 )
 
-const MetadataApi = "rpc"
-const EngineApi = "engine"
+const (
+	MetadataApi = "rpc"
+	EngineApi   = "engine"
+)
 
 // CodecOption specifies which type of messages a codec supports.
 //

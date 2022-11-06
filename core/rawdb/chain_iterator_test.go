@@ -23,8 +23,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core/types"
 )
 
 func TestChainIterator(t *testing.T) {
@@ -65,7 +65,7 @@ func TestChainIterator(t *testing.T) {
 		WriteCanonicalHash(chainDb, block.Hash(), block.NumberU64())
 	}
 
-	var cases = []struct {
+	cases := []struct {
 		from, to uint64
 		reverse  bool
 		expect   []int

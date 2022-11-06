@@ -27,29 +27,29 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/light"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum/light"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/trie"
 	"golang.org/x/crypto/sha3"
 )
 
 func TestHashing(t *testing.T) {
 	t.Parallel()
 
-	var bytecodes = make([][]byte, 10)
+	bytecodes := make([][]byte, 10)
 	for i := 0; i < len(bytecodes); i++ {
 		buf := make([]byte, 100)
 		rand.Read(buf)
 		bytecodes[i] = buf
 	}
 	var want, got string
-	var old = func() {
+	old := func() {
 		hasher := sha3.NewLegacyKeccak256()
 		for i := 0; i < len(bytecodes); i++ {
 			hasher.Reset()
@@ -58,9 +58,9 @@ func TestHashing(t *testing.T) {
 			got = fmt.Sprintf("%v\n%v", got, hash)
 		}
 	}
-	var new = func() {
+	new := func() {
 		hasher := sha3.NewLegacyKeccak256().(crypto.KeccakState)
-		var hash = make([]byte, 32)
+		hash := make([]byte, 32)
 		for i := 0; i < len(bytecodes); i++ {
 			hasher.Reset()
 			hasher.Write(bytecodes[i])
@@ -76,13 +76,13 @@ func TestHashing(t *testing.T) {
 }
 
 func BenchmarkHashing(b *testing.B) {
-	var bytecodes = make([][]byte, 10000)
+	bytecodes := make([][]byte, 10000)
 	for i := 0; i < len(bytecodes); i++ {
 		buf := make([]byte, 100)
 		rand.Read(buf)
 		bytecodes[i] = buf
 	}
-	var old = func() {
+	old := func() {
 		hasher := sha3.NewLegacyKeccak256()
 		for i := 0; i < len(bytecodes); i++ {
 			hasher.Reset()
@@ -90,9 +90,9 @@ func BenchmarkHashing(b *testing.B) {
 			hasher.Sum(nil)
 		}
 	}
-	var new = func() {
+	new := func() {
 		hasher := sha3.NewLegacyKeccak256().(crypto.KeccakState)
-		var hash = make([]byte, 32)
+		hash := make([]byte, 32)
 		for i := 0; i < len(bytecodes); i++ {
 			hasher.Reset()
 			hasher.Write(bytecodes[i])
@@ -154,8 +154,8 @@ func newTestPeer(id string, t *testing.T, term func()) *testPeer {
 		codeRequestHandler:    defaultCodeRequestHandler,
 		term:                  term,
 	}
-	//stderrHandler := log.StreamHandler(os.Stderr, log.TerminalFormat(true))
-	//peer.logger.SetHandler(stderrHandler)
+	// stderrHandler := log.StreamHandler(os.Stderr, log.TerminalFormat(true))
+	// peer.logger.SetHandler(stderrHandler)
 	return peer
 }
 
@@ -310,7 +310,7 @@ func createStorageRequestResponse(t *testPeer, root common.Hash, accounts []comm
 		if len(origin) > 0 {
 			originHash = common.BytesToHash(origin)
 		}
-		var limitHash = common.HexToHash("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+		limitHash := common.HexToHash("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
 		if len(limit) > 0 {
 			limitHash = common.BytesToHash(limit)
 		}
@@ -1314,18 +1314,16 @@ func key32(i uint64) []byte {
 	return key
 }
 
-var (
-	codehashes = []common.Hash{
-		crypto.Keccak256Hash([]byte{0}),
-		crypto.Keccak256Hash([]byte{1}),
-		crypto.Keccak256Hash([]byte{2}),
-		crypto.Keccak256Hash([]byte{3}),
-		crypto.Keccak256Hash([]byte{4}),
-		crypto.Keccak256Hash([]byte{5}),
-		crypto.Keccak256Hash([]byte{6}),
-		crypto.Keccak256Hash([]byte{7}),
-	}
-)
+var codehashes = []common.Hash{
+	crypto.Keccak256Hash([]byte{0}),
+	crypto.Keccak256Hash([]byte{1}),
+	crypto.Keccak256Hash([]byte{2}),
+	crypto.Keccak256Hash([]byte{3}),
+	crypto.Keccak256Hash([]byte{4}),
+	crypto.Keccak256Hash([]byte{5}),
+	crypto.Keccak256Hash([]byte{6}),
+	crypto.Keccak256Hash([]byte{7}),
+}
 
 // getCodeHash returns a pseudo-random code hash
 func getCodeHash(i uint64) []byte {

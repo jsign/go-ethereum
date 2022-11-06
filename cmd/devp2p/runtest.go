@@ -19,9 +19,9 @@ package main
 import (
 	"os"
 
-	"github.com/ethereum/go-ethereum/cmd/devp2p/internal/v4test"
-	"github.com/ethereum/go-ethereum/internal/utesting"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/jsign/go-ethereum/cmd/devp2p/internal/v4test"
+	"github.com/jsign/go-ethereum/internal/utesting"
+	"github.com/jsign/go-ethereum/log"
 	"github.com/urfave/cli/v2"
 )
 
@@ -57,7 +57,7 @@ func runTests(ctx *cli.Context, tests []utesting.Test) error {
 		log.Root().SetHandler(log.DiscardHandler())
 	}
 	// Run the tests.
-	var run = utesting.RunTests
+	run := utesting.RunTests
 	if ctx.Bool(testTAPFlag.Name) {
 		run = utesting.RunTAP
 	}

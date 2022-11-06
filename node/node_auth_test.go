@@ -26,9 +26,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/jsign/go-ethereum/common/hexutil"
+	"github.com/jsign/go-ethereum/rpc"
 )
 
 type helloRPC string
@@ -99,7 +99,7 @@ func TestAuthEndpoints(t *testing.T) {
 	}
 	// Geth must read it from a file, and does not support in-memory JWT secrets, so we create a temporary file.
 	jwtPath := path.Join(t.TempDir(), "jwt_secret")
-	if err := os.WriteFile(jwtPath, []byte(hexutil.Encode(secret[:])), 0600); err != nil {
+	if err := os.WriteFile(jwtPath, []byte(hexutil.Encode(secret[:])), 0o600); err != nil {
 		t.Fatalf("failed to prepare jwt secret file: %v", err)
 	}
 	// We get ports assigned by the node automatically

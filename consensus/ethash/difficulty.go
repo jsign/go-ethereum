@@ -19,8 +19,8 @@ package ethash
 import (
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/holiman/uint256"
+	"github.com/jsign/go-ethereum/core/types"
 )
 
 const (
@@ -100,7 +100,7 @@ func CalcDifficultyHomesteadU256(time uint64, parent *types.Header) *big.Int {
 	adjust.Rsh(adjust, difficultyBoundDivisor) // adjust: pDiff / 2048
 
 	x := (time - parent.Time) / 10 // (time - ptime) / 10)
-	var neg = true
+	neg := true
 	if x == 0 {
 		x = 1
 		neg = false
@@ -163,7 +163,7 @@ func MakeDifficultyCalculatorU256(bombDelay *big.Int) func(time uint64, parent *
 		y := new(uint256.Int)
 		y.SetFromBig(parent.Difficulty)    // y: p_diff
 		pDiff := y.Clone()                 // pdiff: p_diff
-		z := new(uint256.Int).SetUint64(x) //z : +-adj_factor (either pos or negative)
+		z := new(uint256.Int).SetUint64(x) // z : +-adj_factor (either pos or negative)
 		y.Rsh(y, difficultyBoundDivisor)   // y: p__diff / 2048
 		z.Mul(y, z)                        // z: (p_diff / 2048 ) * (+- adj_factor)
 
@@ -178,7 +178,7 @@ func MakeDifficultyCalculatorU256(bombDelay *big.Int) func(time uint64, parent *
 		}
 		// calculate a fake block number for the ice-age delay
 		// Specification: https://eips.ethereum.org/EIPS/eip-1234
-		var pNum = parent.Number.Uint64()
+		pNum := parent.Number.Uint64()
 		if pNum >= bombDelayFromParent {
 			if fakeBlockNumber := pNum - bombDelayFromParent; fakeBlockNumber >= 2*expDiffPeriodUint {
 				z.SetOne()

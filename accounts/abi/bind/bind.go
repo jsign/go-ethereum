@@ -17,7 +17,7 @@
 // Package bind generates Ethereum contract Go bindings.
 //
 // Detailed usage document and tutorial available on the go-ethereum Wiki page:
-// https://github.com/ethereum/go-ethereum/wiki/Native-DApps:-Go-bindings-to-Ethereum-contracts
+// https://github.com/jsign/go-ethereum/wiki/Native-DApps:-Go-bindings-to-Ethereum-contracts
 package bind
 
 import (
@@ -30,8 +30,8 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/jsign/go-ethereum/accounts/abi"
+	"github.com/jsign/go-ethereum/log"
 )
 
 // Lang is a target programming language selector to generate bindings for.
@@ -138,7 +138,7 @@ func Bind(types []string, abis []string, bytecodes []string, fsigs []map[string]
 			normalizedName := methodNormalizer[lang](alias(aliases, original.Name))
 
 			// Ensure there is no duplicated identifier
-			var identifiers = callIdentifiers
+			identifiers := callIdentifiers
 			if !original.IsConstant() {
 				identifiers = transactIdentifiers
 			}

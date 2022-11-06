@@ -23,8 +23,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/p2p"
 )
 
 // Tests that datadirs can be successfully created, be them manually configured
@@ -72,7 +72,7 @@ func TestDatadirCreation(t *testing.T) {
 // Tests that IPC paths are correctly resolved to valid endpoints of different
 // platforms.
 func TestIPCPathResolution(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		DataDir  string
 		IPCPath  string
 		Windows  bool

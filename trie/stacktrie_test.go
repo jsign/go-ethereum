@@ -21,9 +21,9 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethdb/memorydb"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/ethdb/memorydb"
 )
 
 func TestStackTrieInsertAndHash(t *testing.T) {
@@ -205,8 +205,8 @@ func TestEmptyBug(t *testing.T) {
 	st := NewStackTrie(nil)
 	nt := NewEmpty(NewDatabase(memorydb.New()))
 
-	//leaf := common.FromHex("290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563")
-	//value := common.FromHex("94cf40d0d2b44f2b66e07cace1372ca42b73cf21a3")
+	// leaf := common.FromHex("290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563")
+	// value := common.FromHex("94cf40d0d2b44f2b66e07cace1372ca42b73cf21a3")
 	kvs := []struct {
 		K string
 		V string
@@ -231,8 +231,8 @@ func TestValLength56(t *testing.T) {
 	st := NewStackTrie(nil)
 	nt := NewEmpty(NewDatabase(memorydb.New()))
 
-	//leaf := common.FromHex("290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563")
-	//value := common.FromHex("94cf40d0d2b44f2b66e07cace1372ca42b73cf21a3")
+	// leaf := common.FromHex("290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563")
+	// value := common.FromHex("94cf40d0d2b44f2b66e07cace1372ca42b73cf21a3")
 	kvs := []struct {
 		K string
 		V string
@@ -325,7 +325,7 @@ func TestStacktrieNotModifyValues(t *testing.T) {
 	getValue := func(i int) []byte {
 		if i%2 == 0 { // large
 			return crypto.Keccak256(big.NewInt(int64(i)).Bytes())
-		} else { //small
+		} else { // small
 			return big.NewInt(int64(i)).Bytes()
 		}
 	}
@@ -362,7 +362,7 @@ func TestStacktrieSerialization(t *testing.T) {
 	getValue := func(i int) []byte {
 		if i%2 == 0 { // large
 			return crypto.Keccak256(big.NewInt(int64(i)).Bytes())
-		} else { //small
+		} else { // small
 			return big.NewInt(int64(i)).Bytes()
 		}
 	}

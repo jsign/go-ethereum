@@ -21,16 +21,16 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/eth/protocols/eth"
-	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/eth/protocols/eth"
+	"github.com/jsign/go-ethereum/p2p"
 	"github.com/stretchr/testify/assert"
 )
 
 // TestEthProtocolNegotiation tests whether the test suite
 // can negotiate the highest eth protocol in a status message exchange
 func TestEthProtocolNegotiation(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		conn     *Conn
 		caps     []p2p.Cap
 		expected uint32
@@ -139,7 +139,7 @@ func TestChain_GetHeaders(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var tests = []struct {
+	tests := []struct {
 		req      GetBlockHeaders
 		expected []*types.Header
 	}{

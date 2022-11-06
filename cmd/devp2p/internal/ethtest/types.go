@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ethereum/go-ethereum/eth/protocols/eth"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/p2p/rlpx"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/eth/protocols/eth"
+	"github.com/jsign/go-ethereum/p2p"
+	"github.com/jsign/go-ethereum/p2p/rlpx"
+	"github.com/jsign/go-ethereum/rlp"
 )
 
 type Message interface {
@@ -267,7 +267,7 @@ func (c *Conn) ReadSnap(id uint64) (Message, error) {
 		case (TrieNodes{}).Code():
 			snpMsg = new(TrieNodes)
 		default:
-			//return nil, fmt.Errorf("invalid message code: %d", code)
+			// return nil, fmt.Errorf("invalid message code: %d", code)
 			continue
 		}
 		if err := rlp.DecodeBytes(rawData, snpMsg); err != nil {

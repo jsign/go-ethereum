@@ -27,13 +27,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/contracts/checkpointoracle/contract"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/jsign/go-ethereum/accounts/abi/bind"
+	"github.com/jsign/go-ethereum/accounts/abi/bind/backends"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/contracts/checkpointoracle/contract"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/params"
 )
 
 var (
@@ -70,7 +70,8 @@ var (
 // validateOperation executes the operation, watches and delivers all events fired by the backend and ensures the
 // correctness by assert function.
 func validateOperation(t *testing.T, c *contract.CheckpointOracle, backend *backends.SimulatedBackend, operation func(),
-	assert func(<-chan *contract.CheckpointOracleNewCheckpointVote) error, opName string) {
+	assert func(<-chan *contract.CheckpointOracleNewCheckpointVote) error, opName string,
+) {
 	// Watch all events and deliver them to assert function
 	var (
 		sink   = make(chan *contract.CheckpointOracleNewCheckpointVote)

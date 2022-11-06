@@ -21,10 +21,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common/mclock"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/les/utils"
-	"github.com/ethereum/go-ethereum/p2p/enode"
+	"github.com/jsign/go-ethereum/common/mclock"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/les/utils"
+	"github.com/jsign/go-ethereum/p2p/enode"
 )
 
 func expval(v uint64) utils.ExpiredValue {
@@ -35,7 +35,7 @@ func TestNodeDB(t *testing.T) {
 	ndb := newNodeDB(rawdb.NewMemoryDatabase(), mclock.System{})
 	defer ndb.close()
 
-	var cases = []struct {
+	cases := []struct {
 		id       enode.ID
 		ip       string
 		balance  utils.ExpiredValue
@@ -99,7 +99,7 @@ func TestNodeDBExpiration(t *testing.T) {
 	ndb.evictCallBack = callback
 	ndb.cleanupHook = func() { done <- struct{}{} }
 
-	var cases = []struct {
+	cases := []struct {
 		id      []byte
 		neg     bool
 		balance utils.ExpiredValue

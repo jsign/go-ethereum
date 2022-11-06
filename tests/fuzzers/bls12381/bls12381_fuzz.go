@@ -29,8 +29,8 @@ import (
 	gnark "github.com/consensys/gnark-crypto/ecc/bls12-381"
 	"github.com/consensys/gnark-crypto/ecc/bls12-381/fp"
 	"github.com/consensys/gnark-crypto/ecc/bls12-381/fr"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto/bls12381"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/crypto/bls12381"
 	blst "github.com/supranational/blst/bindings/go"
 )
 
@@ -197,7 +197,7 @@ func FuzzCrossG1MultiExp(data []byte) int {
 			break
 		}
 		gethScalars = append(gethScalars, s)
-		var gnarkScalar = &fr.Element{}
+		gnarkScalar := &fr.Element{}
 		gnarkScalar = gnarkScalar.SetBigInt(s).FromMont()
 		gnarkScalars = append(gnarkScalars, *gnarkScalar)
 

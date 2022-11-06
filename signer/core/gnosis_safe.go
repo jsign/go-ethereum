@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/hexutil"
+	"github.com/jsign/go-ethereum/common/math"
+	"github.com/jsign/go-ethereum/signer/core/apitypes"
 )
 
 // GnosisSafeTx is a type to parse the safe-tx returned by the relayer,
@@ -56,7 +56,7 @@ func (tx *GnosisSafeTx) ToTypedData() apitypes.TypedData {
 	if tx.Data != nil {
 		data = *tx.Data
 	}
-	var domainType = []apitypes.Type{{Name: "verifyingContract", Type: "address"}}
+	domainType := []apitypes.Type{{Name: "verifyingContract", Type: "address"}}
 	if tx.ChainId != nil {
 		domainType = append([]apitypes.Type{{Name: "chainId", Type: "uint256"}}, domainType[0])
 	}

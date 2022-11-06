@@ -19,7 +19,7 @@ package trie
 import (
 	"fmt"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common"
 )
 
 // leaf represents a trie leaf node
@@ -168,7 +168,7 @@ func (c *committer) commitChildren(path []byte, n *fullNode) ([17]node, error) {
 // is enabled, leaf nodes will be tracked in the modified nodeset as well.
 func (c *committer) store(path []byte, n node) node {
 	// Larger nodes are replaced by their hash and stored in the database.
-	var hash, _ = n.cache()
+	hash, _ := n.cache()
 
 	// This was not generated - must be a small node stored in the parent.
 	// In theory, we should check if the node is leaf here (embedded node

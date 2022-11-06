@@ -179,7 +179,7 @@ func TestClientWebsocketPing(t *testing.T) {
 	// server can't handle the request.
 
 	// Wait for the context's deadline to be reached before proceeding.
-	// This is important for reproducing https://github.com/ethereum/go-ethereum/issues/19798
+	// This is important for reproducing https://github.com/jsign/go-ethereum/issues/19798
 	<-ctx.Done()
 	close(sendPing)
 
@@ -337,7 +337,7 @@ func wsPingTestHandler(t *testing.T, conn *websocket.Conn, shutdown, sendPing <-
 	}
 
 	// Read from the connection to process control messages.
-	var pongCh = make(chan string)
+	pongCh := make(chan string)
 	conn.SetPongHandler(func(d string) error {
 		t.Logf("server got pong: %q", d)
 		pongCh <- d

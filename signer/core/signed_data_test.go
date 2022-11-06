@@ -26,13 +26,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/signer/core"
-	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+	"github.com/jsign/go-ethereum/accounts/keystore"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/hexutil"
+	"github.com/jsign/go-ethereum/common/math"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/signer/core"
+	"github.com/jsign/go-ethereum/signer/core/apitypes"
 )
 
 var typesStandard = apitypes.Types{
@@ -183,7 +183,7 @@ var typedData = apitypes.TypedData{
 
 func TestSignData(t *testing.T) {
 	api, control := setup(t)
-	//Create two accounts
+	// Create two accounts
 	createAccount(control, api, t)
 	createAccount(control, api, t)
 	control.approveCh <- "1"
@@ -522,7 +522,7 @@ func TestGnosisCustomData(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var td = tx.ToTypedData()
+	td := tx.ToTypedData()
 	_, sighash, err := sign(td)
 	if err != nil {
 		t.Fatal(err)
@@ -652,7 +652,7 @@ func TestGnosisCustomDataWithChainId(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var td = tx.ToTypedData()
+	td := tx.ToTypedData()
 	_, sighash, err := sign(td)
 	if err != nil {
 		t.Fatal(err)

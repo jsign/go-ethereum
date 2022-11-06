@@ -19,11 +19,11 @@ package utils
 import (
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common/mclock"
+	"github.com/jsign/go-ethereum/common/mclock"
 )
 
 func TestValueExpiration(t *testing.T) {
-	var cases = []struct {
+	cases := []struct {
 		input      ExpiredValue
 		timeOffset Fixed64
 		expect     uint64
@@ -42,7 +42,7 @@ func TestValueExpiration(t *testing.T) {
 }
 
 func TestValueAddition(t *testing.T) {
-	var cases = []struct {
+	cases := []struct {
 		input      ExpiredValue
 		addend     int64
 		timeOffset Fixed64
@@ -80,7 +80,7 @@ func TestValueAddition(t *testing.T) {
 }
 
 func TestExpiredValueAddition(t *testing.T) {
-	var cases = []struct {
+	cases := []struct {
 		input      ExpiredValue
 		another    ExpiredValue
 		timeOffset Fixed64
@@ -100,7 +100,7 @@ func TestExpiredValueAddition(t *testing.T) {
 }
 
 func TestExpiredValueSubtraction(t *testing.T) {
-	var cases = []struct {
+	cases := []struct {
 		input      ExpiredValue
 		another    ExpiredValue
 		timeOffset Fixed64
@@ -120,7 +120,7 @@ func TestExpiredValueSubtraction(t *testing.T) {
 }
 
 func TestLinearExpiredValue(t *testing.T) {
-	var cases = []struct {
+	cases := []struct {
 		value  LinearExpiredValue
 		now    mclock.AbsTime
 		expect uint64
@@ -157,7 +157,7 @@ func TestLinearExpiredValue(t *testing.T) {
 }
 
 func TestLinearExpiredAddition(t *testing.T) {
-	var cases = []struct {
+	cases := []struct {
 		value  LinearExpiredValue
 		amount int64
 		now    mclock.AbsTime

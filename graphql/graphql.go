@@ -25,22 +25,20 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/consensus/misc"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/eth/filters"
-	"github.com/ethereum/go-ethereum/internal/ethapi"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/jsign/go-ethereum"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/hexutil"
+	"github.com/jsign/go-ethereum/common/math"
+	"github.com/jsign/go-ethereum/consensus/misc"
+	"github.com/jsign/go-ethereum/core/state"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/eth/filters"
+	"github.com/jsign/go-ethereum/internal/ethapi"
+	"github.com/jsign/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/rpc"
 )
 
-var (
-	errBlockInvariant = errors.New("block objects must be instantiated with at least one of num or hash")
-)
+var errBlockInvariant = errors.New("block objects must be instantiated with at least one of num or hash")
 
 type Long int64
 
@@ -1014,7 +1012,8 @@ func (b *Block) Logs(ctx context.Context, args struct{ Filter BlockFilterCriteri
 
 func (b *Block) Account(ctx context.Context, args struct {
 	Address common.Address
-}) (*Account, error) {
+},
+) (*Account, error) {
 	if b.numberOrHash == nil {
 		_, err := b.resolveHeader(ctx)
 		if err != nil {
@@ -1062,7 +1061,8 @@ func (c *CallResult) Status() Long {
 
 func (b *Block) Call(ctx context.Context, args struct {
 	Data ethapi.TransactionArgs
-}) (*CallResult, error) {
+},
+) (*CallResult, error) {
 	if b.numberOrHash == nil {
 		_, err := b.resolve(ctx)
 		if err != nil {
@@ -1087,7 +1087,8 @@ func (b *Block) Call(ctx context.Context, args struct {
 
 func (b *Block) EstimateGas(ctx context.Context, args struct {
 	Data ethapi.TransactionArgs
-}) (Long, error) {
+},
+) (Long, error) {
 	if b.numberOrHash == nil {
 		_, err := b.resolveHeader(ctx)
 		if err != nil {
@@ -1126,7 +1127,8 @@ func (p *Pending) Transactions(ctx context.Context) (*[]*Transaction, error) {
 
 func (p *Pending) Account(ctx context.Context, args struct {
 	Address common.Address
-}) *Account {
+},
+) *Account {
 	pendingBlockNr := rpc.BlockNumberOrHashWithNumber(rpc.PendingBlockNumber)
 	return &Account{
 		r:             p.r,
@@ -1137,7 +1139,8 @@ func (p *Pending) Account(ctx context.Context, args struct {
 
 func (p *Pending) Call(ctx context.Context, args struct {
 	Data ethapi.TransactionArgs
-}) (*CallResult, error) {
+},
+) (*CallResult, error) {
 	pendingBlockNr := rpc.BlockNumberOrHashWithNumber(rpc.PendingBlockNumber)
 	result, err := ethapi.DoCall(ctx, p.r.backend, args.Data, pendingBlockNr, nil, p.r.backend.RPCEVMTimeout(), p.r.backend.RPCGasCap())
 	if err != nil {
@@ -1157,7 +1160,8 @@ func (p *Pending) Call(ctx context.Context, args struct {
 
 func (p *Pending) EstimateGas(ctx context.Context, args struct {
 	Data ethapi.TransactionArgs
-}) (Long, error) {
+},
+) (Long, error) {
 	pendingBlockNr := rpc.BlockNumberOrHashWithNumber(rpc.PendingBlockNumber)
 	gas, err := ethapi.DoEstimateGas(ctx, p.r.backend, args.Data, pendingBlockNr, p.r.backend.RPCGasCap())
 	return Long(gas), err
@@ -1172,7 +1176,8 @@ type Resolver struct {
 func (r *Resolver) Block(ctx context.Context, args struct {
 	Number *Long
 	Hash   *common.Hash
-}) (*Block, error) {
+},
+) (*Block, error) {
 	var block *Block
 	if args.Number != nil {
 		if *args.Number < 0 {
@@ -1212,7 +1217,8 @@ func (r *Resolver) Block(ctx context.Context, args struct {
 func (r *Resolver) Blocks(ctx context.Context, args struct {
 	From *Long
 	To   *Long
-}) ([]*Block, error) {
+},
+) ([]*Block, error) {
 	from := rpc.BlockNumber(*args.From)
 
 	var to rpc.BlockNumber
@@ -1348,45 +1354,59 @@ type SyncState struct {
 func (s *SyncState) StartingBlock() hexutil.Uint64 {
 	return hexutil.Uint64(s.progress.StartingBlock)
 }
+
 func (s *SyncState) CurrentBlock() hexutil.Uint64 {
 	return hexutil.Uint64(s.progress.CurrentBlock)
 }
+
 func (s *SyncState) HighestBlock() hexutil.Uint64 {
 	return hexutil.Uint64(s.progress.HighestBlock)
 }
+
 func (s *SyncState) SyncedAccounts() hexutil.Uint64 {
 	return hexutil.Uint64(s.progress.SyncedAccounts)
 }
+
 func (s *SyncState) SyncedAccountBytes() hexutil.Uint64 {
 	return hexutil.Uint64(s.progress.SyncedAccountBytes)
 }
+
 func (s *SyncState) SyncedBytecodes() hexutil.Uint64 {
 	return hexutil.Uint64(s.progress.SyncedBytecodes)
 }
+
 func (s *SyncState) SyncedBytecodeBytes() hexutil.Uint64 {
 	return hexutil.Uint64(s.progress.SyncedBytecodeBytes)
 }
+
 func (s *SyncState) SyncedStorage() hexutil.Uint64 {
 	return hexutil.Uint64(s.progress.SyncedStorage)
 }
+
 func (s *SyncState) SyncedStorageBytes() hexutil.Uint64 {
 	return hexutil.Uint64(s.progress.SyncedStorageBytes)
 }
+
 func (s *SyncState) HealedTrienodes() hexutil.Uint64 {
 	return hexutil.Uint64(s.progress.HealedTrienodes)
 }
+
 func (s *SyncState) HealedTrienodeBytes() hexutil.Uint64 {
 	return hexutil.Uint64(s.progress.HealedTrienodeBytes)
 }
+
 func (s *SyncState) HealedBytecodes() hexutil.Uint64 {
 	return hexutil.Uint64(s.progress.HealedBytecodes)
 }
+
 func (s *SyncState) HealedBytecodeBytes() hexutil.Uint64 {
 	return hexutil.Uint64(s.progress.HealedBytecodeBytes)
 }
+
 func (s *SyncState) HealingTrienodes() hexutil.Uint64 {
 	return hexutil.Uint64(s.progress.HealingTrienodes)
 }
+
 func (s *SyncState) HealingBytecode() hexutil.Uint64 {
 	return hexutil.Uint64(s.progress.HealingBytecode)
 }

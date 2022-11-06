@@ -28,18 +28,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/cmd/evm/internal/compiler"
-	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/core/vm/runtime"
-	"github.com/ethereum/go-ethereum/eth/tracers/logger"
-	"github.com/ethereum/go-ethereum/internal/flags"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/jsign/go-ethereum/cmd/evm/internal/compiler"
+	"github.com/jsign/go-ethereum/cmd/utils"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core"
+	"github.com/jsign/go-ethereum/core/rawdb"
+	"github.com/jsign/go-ethereum/core/state"
+	"github.com/jsign/go-ethereum/core/vm"
+	"github.com/jsign/go-ethereum/core/vm/runtime"
+	"github.com/jsign/go-ethereum/eth/tracers/logger"
+	"github.com/jsign/go-ethereum/internal/flags"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/params"
 	"github.com/urfave/cli/v2"
 )
 
@@ -55,7 +55,7 @@ var runCommand = &cli.Command{
 // the initialized Genesis structure
 func readGenesis(genesisPath string) *core.Genesis {
 	// Make sure we have a valid genesis JSON
-	//genesisPath := ctx.Args().First()
+	// genesisPath := ctx.Args().First()
 	if len(genesisPath) == 0 {
 		utils.Fatalf("Must supply path to genesis JSON file")
 	}
@@ -165,7 +165,7 @@ func runCmd(ctx *cli.Context) error {
 			var err error
 			// If - is specified, it means that code comes from stdin
 			if codeFileFlag == "-" {
-				//Try reading from stdin
+				// Try reading from stdin
 				if hexcode, err = io.ReadAll(os.Stdin); err != nil {
 					fmt.Printf("Could not load code from stdin: %v\n", err)
 					os.Exit(1)

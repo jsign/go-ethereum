@@ -24,9 +24,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/p2p/enode"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/p2p"
+	"github.com/jsign/go-ethereum/p2p/enode"
 )
 
 func TestULCAnnounceThresholdLes2(t *testing.T) { testULCAnnounceThreshold(t, 2) }
@@ -48,7 +48,7 @@ func testULCAnnounceThreshold(t *testing.T, protocol int) {
 		return c, teardown
 	}
 
-	var cases = []struct {
+	cases := []struct {
 		height    []int
 		threshold int
 		expect    uint64

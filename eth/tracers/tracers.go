@@ -21,8 +21,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/core/vm"
 )
 
 // Context contains some contextual infos for a transaction execution that is not
@@ -44,9 +44,7 @@ type Tracer interface {
 
 type lookupFunc func(string, *Context, json.RawMessage) (Tracer, error)
 
-var (
-	lookups []lookupFunc
-)
+var lookups []lookupFunc
 
 // RegisterLookup registers a method as a lookup for tracers, meaning that
 // users can invoke a named tracer through that lookup. If 'wildcard' is true,

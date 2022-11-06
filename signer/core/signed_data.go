@@ -22,14 +22,14 @@ import (
 	"fmt"
 	"mime"
 
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/consensus/clique"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+	"github.com/jsign/go-ethereum/accounts"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/hexutil"
+	"github.com/jsign/go-ethereum/consensus/clique"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/crypto"
+	"github.com/jsign/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum/signer/core/apitypes"
 )
 
 // sign receives a request and produces a signature
@@ -74,7 +74,7 @@ func (api *SignerAPI) sign(req *SignDataRequest, legacyV bool) (hexutil.Bytes, e
 //
 // Different types of validation occur.
 func (api *SignerAPI) SignData(ctx context.Context, contentType string, addr common.MixedcaseAddress, data interface{}) (hexutil.Bytes, error) {
-	var req, transformV, err = api.determineSignatureFormat(ctx, contentType, addr, data)
+	req, transformV, err := api.determineSignatureFormat(ctx, contentType, addr, data)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +232,8 @@ func (api *SignerAPI) SignTypedData(ctx context.Context, addr common.MixedcaseAd
 // signTypedData is identical to the capitalized version, except that it also returns the hash (preimage)
 // - the signature preimage (hash)
 func (api *SignerAPI) signTypedData(ctx context.Context, addr common.MixedcaseAddress,
-	typedData apitypes.TypedData, validationMessages *apitypes.ValidationMessages) (hexutil.Bytes, hexutil.Bytes, error) {
+	typedData apitypes.TypedData, validationMessages *apitypes.ValidationMessages,
+) (hexutil.Bytes, hexutil.Bytes, error) {
 	sighash, rawData, err := apitypes.TypedDataAndHash(typedData)
 	if err != nil {
 		return nil, nil, err
@@ -246,7 +247,8 @@ func (api *SignerAPI) signTypedData(ctx context.Context, addr common.MixedcaseAd
 		Rawdata:     []byte(rawData),
 		Messages:    messages,
 		Hash:        sighash,
-		Address:     addr}
+		Address:     addr,
+	}
 	if validationMessages != nil {
 		req.Callinfo = validationMessages.Messages
 	}
@@ -271,7 +273,7 @@ func (api *SignerAPI) EcRecover(ctx context.Context, data hexutil.Bytes, sig hex
 	// Note, the signature must conform to the secp256k1 curve R, S and V values, where
 	// the V value must be 27 or 28 for legacy reasons.
 	//
-	// https://github.com/ethereum/go-ethereum/wiki/Management-APIs#personal_ecRecover
+	// https://github.com/jsign/go-ethereum/wiki/Management-APIs#personal_ecRecover
 	if len(sig) != 65 {
 		return common.Address{}, fmt.Errorf("signature must be 65 bytes long")
 	}

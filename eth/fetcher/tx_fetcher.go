@@ -25,12 +25,12 @@ import (
 	"time"
 
 	mapset "github.com/deckarep/golang-set"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/mclock"
-	"github.com/ethereum/go-ethereum/core/txpool"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/metrics"
+	"github.com/jsign/go-ethereum/common"
+	"github.com/jsign/go-ethereum/common/mclock"
+	"github.com/jsign/go-ethereum/core/txpool"
+	"github.com/jsign/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum/log"
+	"github.com/jsign/go-ethereum/metrics"
 )
 
 const (
@@ -62,11 +62,9 @@ const (
 	txGatherSlack = 100 * time.Millisecond
 )
 
-var (
-	// txFetchTimeout is the maximum allotted time to return an explicitly
-	// requested transaction.
-	txFetchTimeout = 5 * time.Second
-)
+// txFetchTimeout is the maximum allotted time to return an explicitly
+// requested transaction.
+var txFetchTimeout = 5 * time.Second
 
 var (
 	txAnnounceInMeter          = metrics.NewRegisteredMeter("eth/fetcher/transaction/announces/in", nil)
@@ -188,7 +186,8 @@ func NewTxFetcher(hasTx func(common.Hash) bool, addTxs func([]*types.Transaction
 // a simulated version and the internal randomness with a deterministic one.
 func NewTxFetcherForTests(
 	hasTx func(common.Hash) bool, addTxs func([]*types.Transaction) []error, fetchTxs func(string, []common.Hash) error,
-	clock mclock.Clock, rand *mrand.Rand) *TxFetcher {
+	clock mclock.Clock, rand *mrand.Rand,
+) *TxFetcher {
 	return &TxFetcher{
 		notify:      make(chan *txAnnounce),
 		cleanup:     make(chan *txDelivery),
@@ -279,9 +278,9 @@ func (f *TxFetcher) Enqueue(peer string, txs []*types.Transaction, direct bool) 
 
 	// Push all the transactions into the pool, tracking underpriced ones to avoid
 	// re-requesting them and dropping the peer in case of malicious transfers.
-	var (
-		added = make([]common.Hash, 0, len(txs))
-	)
+
+	added := make([]common.Hash, 0, len(txs))
+
 	// proceed in batches
 	for i := 0; i < len(txs); i += 128 {
 		end := i + 128
