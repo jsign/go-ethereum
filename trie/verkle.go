@@ -223,7 +223,7 @@ func (trie *VerkleTrie) Hash() common.Hash {
 }
 
 func nodeToDBKey(n verkle.VerkleNode) []byte {
-	ret := n.Commit().Bytes()
+	ret := n.Commitment().Bytes()
 	return ret[:]
 }
 

@@ -64,10 +64,11 @@ func GetTreeKey(address []byte, treeIndex *uint256.Int, subIndex byte) []byte {
 		address = append(aligned[:32-len(address)], address...)
 	}
 
-	// poly = [2*64<<8, addressLE_low, addressLE_high, trieIndexLE_low, trieIndexLE_high]
+	// poly = [2+256*64, address_le_low, address_le_high, tree_index_le_low, tree_index_le_high]
 	var poly [5]fr.Element
 
-	// 32-byte address, interpreted as two little endian 16-byte numbers.
+	// 32-byte address, interpreted as two little endian
+	// 16-byte numbers.
 	verkle.FromLEBytes(&poly[1], address[:16])
 	verkle.FromLEBytes(&poly[2], address[16:])
 
@@ -76,9 +77,9 @@ func GetTreeKey(address []byte, treeIndex *uint256.Int, subIndex byte) []byte {
 	// poly[3] = LE({CC,BB,AA,00...0}) (16 bytes), poly[4]=LE({00,00,...}) (16 bytes).
 	//
 	// To avoid unnecessary endianness conversions for go-ipa, we do some trick:
-	// - poly[3] integer is the same as the *top* 16 bytes (trieIndexBytes[16:]) of
+	// - poly[3]'s byte representation is the same as the *top* 16 bytes (trieIndexBytes[16:]) of
 	//   32-byte aligned big-endian representation (BE({00,...,AA,BB,CC})).
-	// - poly[4] integer is the same as the *low* 16 bytes (trieIndexBytes[:16]) of
+	// - poly[4]'s byte representation is the same as the *low* 16 bytes (trieIndexBytes[:16]) of
 	//   the 32-byte aligned big-endian representation (BE({00,00,...}).
 	trieIndexBytes := treeIndex.Bytes32()
 	verkle.FromBytes(&poly[3], trieIndexBytes[16:])
@@ -87,7 +88,7 @@ func GetTreeKey(address []byte, treeIndex *uint256.Int, subIndex byte) []byte {
 	cfg := verkle.GetConfig()
 	ret := cfg.CommitToPoly(poly[:], 0)
 
-	// add a constant point corresponding to poly[0]=[2*64<<8].
+	// add a constant point corresponding to poly[0]=[2+256*64].
 	ret.Add(ret, getTreePolyIndex0Point)
 
 	return PointToHash(ret, subIndex)
