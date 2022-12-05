@@ -38,6 +38,8 @@ const (
 	codeCacheSize = 64 * 1024 * 1024
 )
 
+var TestVKTOpenStateless = false
+
 // Database wraps access to tries and contract code.
 type Database interface {
 	// OpenTrie opens the main account trie.
@@ -256,6 +258,13 @@ func (db *VerkleDB) OpenTrie(root common.Hash) (Trie, error) {
 	r, err := verkle.ParseNode(payload, 0, root[:])
 	if err != nil {
 		panic(err)
+	}
+
+	if TestVKTOpenStateless {
+		r, err = verkle.ParseStatelessNode(payload, 0, root[:])
+		if err != nil {
+			panic(err)
+		}
 	}
 	return trie.NewVerkleTrie(r, db.db), err
 }
