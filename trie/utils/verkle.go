@@ -82,9 +82,11 @@ func GetTreeKey(address []byte, treeIndex *uint256.Int, subIndex byte) []byte {
 	//   32-byte aligned big-endian representation (BE({00,...,AA,BB,CC})).
 	// - poly[4]'s byte representation is the same as the *low* 16 bytes (trieIndexBytes[:16]) of
 	//   the 32-byte aligned big-endian representation (BE({00,00,...}).
-	trieIndexBytes := treeIndex.Bytes32()
-	verkle.FromBytes(&poly[3], trieIndexBytes[16:])
-	verkle.FromBytes(&poly[4], trieIndexBytes[:16])
+	if !treeIndex.IsZero() {
+		trieIndexBytes := treeIndex.Bytes32()
+		verkle.FromBytes(&poly[3], trieIndexBytes[16:])
+		verkle.FromBytes(&poly[4], trieIndexBytes[:16])
+	}
 
 	cfg := verkle.GetConfig()
 	ret := cfg.CommitToPoly(poly[:], 0)
