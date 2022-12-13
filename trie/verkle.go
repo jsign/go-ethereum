@@ -119,7 +119,7 @@ func (t *VerkleTrie) TryUpdateAccount(key []byte, acc *types.StateAccount) error
 	var (
 		err            error
 		nonce, balance [32]byte
-		values         = make([][]byte, verkle.NodeWidth)
+		values         = make([][]byte, 4)
 		stem           = utils.GetTreeKeyVersion(key[:])
 	)
 
@@ -156,10 +156,9 @@ func (t *VerkleTrie) TryUpdateAccount(key []byte, acc *types.StateAccount) error
 }
 
 func (trie *VerkleTrie) TryUpdateStem(key []byte, values [][]byte) {
-	resolver :=
-		func(h []byte) ([]byte, error) {
-			return trie.db.diskdb.Get(h)
-		}
+	resolver := func(h []byte) ([]byte, error) {
+		return trie.db.diskdb.Get(h)
+	}
 	switch root := trie.root.(type) {
 	case *verkle.InternalNode:
 		root.InsertStem(key, values, resolver)
@@ -239,9 +238,23 @@ func nodeToDBKey(n verkle.VerkleNode) []byte {
 // Commit writes all nodes to the trie's memory database, tracking the internal
 // and external (for account tries) references.
 func (trie *VerkleTrie) Commit(_ bool) (common.Hash, *NodeSet, error) {
-	flush := make(chan verkle.VerkleNode)
+	type vnflush struct {
+		n     verkle.VerkleNode
+		value []byte
+		dbKey []byte
+	}
+	flush := make(chan vnflush, 1024)
 	resolver := func(n verkle.VerkleNode) {
-		flush <- n
+		value, err := n.Serialize()
+		if err != nil {
+			panic(err)
+		}
+		dbKey := nodeToDBKey(n)
+		flush <- vnflush{
+			n:     n,
+			value: value,
+			dbKey: dbKey,
+		}
 	}
 	go func() {
 		switch root := trie.root.(type) {
@@ -255,12 +268,8 @@ func (trie *VerkleTrie) Commit(_ bool) (common.Hash, *NodeSet, error) {
 	var commitCount int
 	for n := range flush {
 		commitCount += 1
-		value, err := n.Serialize()
-		if err != nil {
-			panic(err)
-		}
 
-		if err := trie.db.diskdb.Put(nodeToDBKey(n), value); err != nil {
+		if err := trie.db.diskdb.Put(n.dbKey, n.value); err != nil {
 			return common.Hash{}, NewNodeSet(common.Hash{}), err
 		}
 	}
