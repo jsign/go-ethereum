@@ -13,12 +13,12 @@ import (
 )
 
 func init() {
-	register("prestateTracer", NewTreeAccess)
+	register("treeAccessLogger", NewTreeAccess)
 }
 
 type TreeAccess struct {
 	Contract    common.Address
-	Opcode      vm.OpCode
+	Opcode      string
 	StorageSlot common.Hash
 	MPTDepth    int
 }
@@ -77,11 +77,11 @@ func (l *TreeAccessLogger) CaptureState(pc uint64, op vm.OpCode, gas, cost uint6
 	if err != nil {
 		log.Printf("Error getting the proof: %s", err)
 	}
-	log.Printf("Contract %s, %s, storage slot %s has depth %d", contract.Address(), op.String(), storageSlot, len(proof))
+	// log.Printf("Contract %s, %s, storage slot %s has depth %d", contract.Address(), op.String(), storageSlot, len(proof))
 
 	l.accesses = append(l.accesses, TreeAccess{
 		Contract:    contract.Address(),
-		Opcode:      op,
+		Opcode:      op.String(),
 		StorageSlot: storageSlot,
 		MPTDepth:    len(proof),
 	})
