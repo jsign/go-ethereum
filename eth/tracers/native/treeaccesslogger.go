@@ -23,7 +23,9 @@ var codeStorageDelta = uint256.NewInt(0).Sub(utils.CodeOffset, utils.HeaderStora
 type VKTBranchAccess int
 
 const (
-	VKTAccessWrite VKTBranchAccess = iota
+	VKTAccessWriteFirstTime VKTBranchAccess = iota
+	VKTAccessWriteFree
+	VKTAccessWriteHot
 	VKTAccessReadFirstTime
 	VKTAccessReadFree
 	VKTAccessReadHot
@@ -39,8 +41,9 @@ type TreeAccess struct {
 type TreeAccessLogger struct {
 	env *vm.EVM
 
-	accesses          []TreeAccess
-	vktBranchAccesses map[common.Address]map[string]struct{}
+	accesses               []TreeAccess
+	vktBranchReadAccesses  map[common.Address]map[string]struct{}
+	vktBranchWriteAccesses map[common.Address]map[string]struct{}
 
 	interrupt uint32 // Atomic flag to signal execution interruption
 	reason    error  // Textual reason for the interruption
@@ -48,7 +51,8 @@ type TreeAccessLogger struct {
 
 func NewTreeAccess(ctx *tracers.Context, config json.RawMessage) (tracers.Tracer, error) {
 	ta := &TreeAccessLogger{
-		vktBranchAccesses: make(map[common.Address]map[string]struct{}),
+		vktBranchReadAccesses:  make(map[common.Address]map[string]struct{}),
+		vktBranchWriteAccesses: make(map[common.Address]map[string]struct{}),
 	}
 	return ta, nil
 }
@@ -95,6 +99,7 @@ func (l *TreeAccessLogger) CaptureState(pc uint64, op vm.OpCode, gas, cost uint6
 	}
 
 	var branchAccess VKTBranchAccess
+
 	// VKT locality analysis
 	if op == vm.SLOAD {
 		// Optimized case where we get storage slots "for free"
@@ -102,8 +107,8 @@ func (l *TreeAccessLogger) CaptureState(pc uint64, op vm.OpCode, gas, cost uint6
 			branchAccess = VKTAccessReadFree
 		} else {
 			contractAddr := contract.Address()
-			if _, ok := l.vktBranchAccesses[contractAddr]; !ok {
-				l.vktBranchAccesses[contractAddr] = map[string]struct{}{}
+			if _, ok := l.vktBranchReadAccesses[contractAddr]; !ok {
+				l.vktBranchReadAccesses[contractAddr] = map[string]struct{}{}
 			}
 			vktKey, err := utils.GetTreeKeyStorageSlot(contractAddr.Bytes(), storageSlot.Big())
 			if err != nil {
@@ -111,11 +116,34 @@ func (l *TreeAccessLogger) CaptureState(pc uint64, op vm.OpCode, gas, cost uint6
 				return
 			}
 			stem := string(vktKey[:31])
-			if _, ok := l.vktBranchAccesses[contractAddr][stem]; ok {
+			if _, ok := l.vktBranchReadAccesses[contractAddr][stem]; ok {
 				branchAccess = VKTAccessReadHot
 			} else {
-				l.vktBranchAccesses[contractAddr][stem] = struct{}{}
+				l.vktBranchReadAccesses[contractAddr][stem] = struct{}{}
 				branchAccess = VKTAccessReadFirstTime
+			}
+		}
+	}
+	if op == vm.SSTORE {
+		// Optimized case where we get storage slots "for free"
+		if storageSlot.Big().Cmp(codeStorageDelta.ToBig()) < 0 {
+			branchAccess = VKTAccessWriteFree
+		} else {
+			contractAddr := contract.Address()
+			if _, ok := l.vktBranchWriteAccesses[contractAddr]; !ok {
+				l.vktBranchWriteAccesses[contractAddr] = map[string]struct{}{}
+			}
+			vktKey, err := utils.GetTreeKeyStorageSlot(contractAddr.Bytes(), storageSlot.Big())
+			if err != nil {
+				log.Printf("Error getting VKT key: %s", err)
+				return
+			}
+			stem := string(vktKey[:31])
+			if _, ok := l.vktBranchWriteAccesses[contractAddr][stem]; ok {
+				branchAccess = VKTAccessWriteHot
+			} else {
+				l.vktBranchWriteAccesses[contractAddr][stem] = struct{}{}
+				branchAccess = VKTAccessWriteFirstTime
 			}
 		}
 	}
