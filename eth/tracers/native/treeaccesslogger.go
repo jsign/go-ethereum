@@ -153,8 +153,8 @@ func (l *TreeAccessLogger) CaptureState(pc uint64, op vm.OpCode, gas, cost uint6
 		MPTDepth:        len(proof),
 		VKTBranchAccess: branchAccess,
 	})
-	last := l.accesses[len(l.accesses)-1]
-	log.Printf("Contract %s:%s -> (MPT depth %d) (VKTBranchAccess is %d)", last.Contract, storageSlot, last.MPTDepth, last.VKTBranchAccess)
+	// last := l.accesses[len(l.accesses)-1]
+	// log.Printf("Contract %s:%s -> (MPT depth %d) (VKTBranchAccess is %d)", last.Contract, storageSlot, last.MPTDepth, last.VKTBranchAccess)
 }
 
 // CaptureFault implements the EVMLogger interface to trace an execution fault
