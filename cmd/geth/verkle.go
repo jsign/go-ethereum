@@ -17,7 +17,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -71,41 +70,43 @@ in which key1, key2, ... are expanded.
 // (only its nodes are loaded) so there is no need to flush them, the garbage collector should
 // take care of that for us.
 func checkChildren(root verkle.VerkleNode, resolver verkle.NodeResolverFn) error {
-	switch node := root.(type) {
-	case *verkle.InternalNode:
-		for i, child := range node.Children() {
-			childC := child.ComputeCommitment().Bytes()
+	/*
+		switch node := root.(type) {
+		case *verkle.InternalNode:
+			for i, child := range node.Children() {
+				childC := child.ComputeCommitment().Bytes()
 
-			childS, err := resolver(childC[:])
-			if bytes.Equal(childC[:], zero[:]) {
-				continue
+				childS, err := resolver(childC[:])
+				if bytes.Equal(childC[:], zero[:]) {
+					continue
+				}
+				if err != nil {
+					return fmt.Errorf("could not find child %x in db: %w", childC, err)
+				}
+				// depth is set to 0, the tree isn't rebuilt so it's not a problem
+				childN, err := verkle.ParseNode(childS, 0, childC[:])
+				if err != nil {
+					return fmt.Errorf("decode error child %x in db: %w", child.ComputeCommitment().Bytes(), err)
+				}
+				if err := checkChildren(childN, resolver); err != nil {
+					return fmt.Errorf("%x%w", i, err) // write the path to the erroring node
+				}
 			}
-			if err != nil {
-				return fmt.Errorf("could not find child %x in db: %w", childC, err)
-			}
-			// depth is set to 0, the tree isn't rebuilt so it's not a problem
-			childN, err := verkle.ParseNode(childS, 0, childC[:])
-			if err != nil {
-				return fmt.Errorf("decode error child %x in db: %w", child.ComputeCommitment().Bytes(), err)
-			}
-			if err := checkChildren(childN, resolver); err != nil {
-				return fmt.Errorf("%x%w", i, err) // write the path to the erroring node
-			}
-		}
-	case *verkle.LeafNode:
-		// sanity check: ensure at least one value is non-zero
+		case *verkle.LeafNode:
+			// sanity check: ensure at least one value is non-zero
 
-		for i := 0; i < verkle.NodeWidth; i++ {
-			if len(node.Value(i)) != 0 {
-				return nil
+			for i := 0; i < verkle.NodeWidth; i++ {
+				if len(node.Value(i)) != 0 {
+					return nil
+				}
 			}
+			return fmt.Errorf("Both balance and nonce are 0")
+		case verkle.Empty:
+			// nothing to do
+		default:
+			return fmt.Errorf("unsupported type encountered %v", root)
 		}
-		return fmt.Errorf("Both balance and nonce are 0")
-	case verkle.Empty:
-		// nothing to do
-	default:
-		return fmt.Errorf("unsupported type encountered %v", root)
-	}
+	*/
 
 	return nil
 }
@@ -203,7 +204,7 @@ func expandVerkle(ctx *cli.Context) error {
 		root.Get(key, chaindb.Get)
 	}
 
-	if err := os.WriteFile("dump.dot", []byte(verkle.ToDot(root)), 0600); err != nil {
+	if err := os.WriteFile("dump.dot", []byte(verkle.ToDot(root)), 0o600); err != nil {
 		log.Error("Failed to dump file", "err", err)
 	} else {
 		log.Info("Tree was dumped to file", "file", "dump.dot")

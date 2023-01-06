@@ -10,32 +10,46 @@ import (
 	statedb "github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/eth/tracers"
+	"github.com/ethereum/go-ethereum/trie/utils"
+	"github.com/holiman/uint256"
 )
 
 func init() {
 	register("treeAccessLogger", NewTreeAccess)
 }
 
+var codeStorageDelta = uint256.NewInt(0).Sub(utils.CodeOffset, utils.HeaderStorageOffset)
+
+type VKTBranchAccess int
+
+const (
+	VKTAccessWrite VKTBranchAccess = iota
+	VKTAccessReadFirstTime
+	VKTAccessReadFree
+	VKTAccessReadHot
+)
+
 type TreeAccess struct {
-	Contract    common.Address
-	Opcode      string
-	StorageSlot common.Hash
-	MPTDepth    int
+	Contract common.Address
+	MPTDepth int
+
+	VKTBranchAccess VKTBranchAccess
 }
 
 type TreeAccessLogger struct {
 	env *vm.EVM
 
-	accesses []TreeAccess
-	output   []byte
-	err      error
+	accesses          []TreeAccess
+	vktBranchAccesses map[common.Address]map[string]struct{}
 
 	interrupt uint32 // Atomic flag to signal execution interruption
 	reason    error  // Textual reason for the interruption
 }
 
 func NewTreeAccess(ctx *tracers.Context, config json.RawMessage) (tracers.Tracer, error) {
-	ta := &TreeAccessLogger{}
+	ta := &TreeAccessLogger{
+		vktBranchAccesses: make(map[common.Address]map[string]struct{}),
+	}
 	return ta, nil
 }
 
@@ -72,19 +86,47 @@ func (l *TreeAccessLogger) CaptureState(pc uint64, op vm.OpCode, gas, cost uint6
 	} else {
 		return
 	}
+
 	realStateDB := l.env.StateDB.(*statedb.StateDB)
 	proof, err := realStateDB.GetStorageProof(contract.Address(), storageSlot)
 	if err != nil {
 		log.Printf("Error getting the proof: %s", err)
+		return
 	}
-	// log.Printf("Contract %s, %s, storage slot %s has depth %d", contract.Address(), op.String(), storageSlot, len(proof))
+
+	var branchAccess VKTBranchAccess
+	// VKT locality analysis
+	if op == vm.SLOAD {
+		// Optimized case where we get storage slots "for free"
+		if storageSlot.Big().Cmp(codeStorageDelta.ToBig()) < 0 {
+			branchAccess = VKTAccessReadFree
+		} else {
+			contractAddr := contract.Address()
+			if _, ok := l.vktBranchAccesses[contractAddr]; !ok {
+				l.vktBranchAccesses[contractAddr] = map[string]struct{}{}
+			}
+			vktKey, err := utils.GetTreeKeyStorageSlot(contractAddr.Bytes(), storageSlot.Big())
+			if err != nil {
+				log.Printf("Error getting VKT key: %s", err)
+				return
+			}
+			stem := string(vktKey[:31])
+			if _, ok := l.vktBranchAccesses[contractAddr][stem]; ok {
+				branchAccess = VKTAccessReadHot
+			} else {
+				l.vktBranchAccesses[contractAddr][stem] = struct{}{}
+				branchAccess = VKTAccessReadFirstTime
+			}
+		}
+	}
 
 	l.accesses = append(l.accesses, TreeAccess{
-		Contract:    contract.Address(),
-		Opcode:      op.String(),
-		StorageSlot: storageSlot,
-		MPTDepth:    len(proof),
+		Contract:        contract.Address(),
+		MPTDepth:        len(proof),
+		VKTBranchAccess: branchAccess,
 	})
+	last := l.accesses[len(l.accesses)-1]
+	log.Printf("Contract %s:%s -> (MPT depth %d) (VKTBranchAccess is %d)", last.Contract, storageSlot, last.MPTDepth, last.VKTBranchAccess)
 }
 
 // CaptureFault implements the EVMLogger interface to trace an execution fault
@@ -94,8 +136,6 @@ func (l *TreeAccessLogger) CaptureFault(pc uint64, op vm.OpCode, gas, cost uint6
 
 // CaptureEnd is called after the call finishes to finalize the tracing.
 func (l *TreeAccessLogger) CaptureEnd(output []byte, gasUsed uint64, err error) {
-	l.output = output
-	l.err = err
 }
 
 func (l *TreeAccessLogger) CaptureEnter(typ vm.OpCode, from common.Address, to common.Address, input []byte, gas uint64, value *big.Int) {
