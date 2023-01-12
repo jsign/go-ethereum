@@ -119,7 +119,7 @@ func (t *VerkleTrie) TryUpdateAccount(key []byte, acc *types.StateAccount) error
 	var (
 		err            error
 		nonce, balance [32]byte
-		values         = make([][]byte, 4)
+		values         = make([][]byte, 256)
 		stem           = utils.GetTreeKeyVersion(key[:])
 	)
 
