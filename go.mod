@@ -13,7 +13,7 @@ require (
 	github.com/cespare/cp v0.1.0
 	github.com/cloudflare/cloudflare-go v0.14.0
 	github.com/consensys/gnark-crypto v0.4.1-0.20210426202927-39ac3d4b3f1f
-	github.com/crate-crypto/go-ipa v0.0.0-20221111143132-9aa5d42120bc
+	github.com/crate-crypto/go-ipa v0.0.0-20230112133036-98736f2f2808
 	github.com/davecgh/go-spew v1.1.1
 	github.com/deckarep/golang-set v1.8.0
 	github.com/docker/docker v1.6.2
@@ -107,6 +107,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/gballet/go-verkle => github.com/gballet/go-verkle v0.0.0-20221213233340-474c89b28152
-
-replace github.com/crate-crypto/go-ipa => github.com/jsign/go-ipa v0.0.0-20221213212217-fcc1cb4ffdd5
+replace github.com/gballet/go-verkle => github.com/gballet/go-verkle v0.0.0-20230112140635-3e8bae599d5c
