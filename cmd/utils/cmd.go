@@ -182,7 +182,8 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 	// Run actual the import.
 	blocks := make(types.Blocks, importBatchSize)
 	n := 0
-	for batch := 0; ; batch++ {
+	ss := time.Now()
+	for batch := 0; batch < 97; batch++ {
 		// Load a batch of RLP blocks.
 		if checkInterrupt() {
 			return fmt.Errorf("interrupted")
@@ -219,6 +220,7 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 			return fmt.Errorf("invalid block %d: %v", n, err)
 		}
 	}
+	fmt.Printf("Took: %v\n", time.Since(ss))
 	return nil
 }
 

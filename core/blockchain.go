@@ -1,4 +1,5 @@
 // Copyright 2014 The go-ethereum Authors
+
 // This file is part of the go-ethereum library.
 //
 // The go-ethereum library is free software: you can redistribute it and/or modify
@@ -1017,7 +1018,7 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 		// a background routine to re-indexed all indices in [ancients - txlookupLimit, ancients)
 		// range. In this case, all tx indices of newly imported blocks should be
 		// generated.
-		var batch = bc.db.NewBatch()
+		batch := bc.db.NewBatch()
 		for i, block := range blockChain {
 			if bc.txLookupLimit == 0 || ancientLimit <= bc.txLookupLimit || block.NumberU64() >= ancientLimit-bc.txLookupLimit {
 				rawdb.WriteTxLookupEntriesByBlock(batch, block)
@@ -1607,24 +1608,31 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 
 		// Retrieve the parent block and it's state to execute on top
 		start := time.Now()
+		startz := time.Now()
 		parent := it.previous()
 		if parent == nil {
 			parent = bc.GetHeader(block.ParentHash(), block.NumberU64()-1)
 		}
 		// perform the verkle fork if this is the fork block
 		if block.NumberU64() == 230081 {
-			proot := common.HexToHash("0x57c783c15b3e79dc2eb0d6a5d7d780936a2da4ce8ef842d64344c65dcd3a986e")
+			proot := common.HexToHash("0x326321001e813a6882f81c58aac2d6c165792e640480a09d5b48948d52578d41")
 			bc.SetVerkleFork(parent.Root, proot)
 		}
+		// fmt.Printf("Checkpoint 1: %v\n", time.Since(startz))
+		startz = time.Now()
+
 		statedb, err := state.New(parent.Root, bc.stateCache, bc.snaps)
 		if err != nil {
 			return it.index, err
 		}
-
+		// fmt.Printf("Checkpoint 2: %v\n", time.Since(startz))
+		startz = time.Now()
 		// Enable prefetching to pull in trie node paths while processing transactions
 		statedb.StartPrefetcher("chain")
 		activeState = statedb
 
+		// fmt.Printf("Checkpoint 3: %v\n", time.Since(startz))
+		startz = time.Now()
 		// If we have a followup block, run that against the current state to pre-cache
 		// transactions and probabilistically some of the account/storage trie nodes.
 		var followupInterrupt uint32
@@ -1643,6 +1651,8 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 			}
 		}
 
+		//		fmt.Printf("Checkpoint 4: %v\n", time.Since(startz))
+		startz = time.Now()
 		// Process block using the parent state as reference point
 		substart := time.Now()
 		receipts, logs, usedGas, err := bc.processor.Process(block, statedb, bc.vmConfig)
@@ -1653,6 +1663,8 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 		}
 		bc.AddRootTranslation(block.Root(), statedb.IntermediateRoot(false))
 
+		// fmt.Printf("Checkpoint 5: %v\n", time.Since(startz))
+		startz = time.Now()
 		// Update the metrics touched during block processing
 		accountReadTimer.Update(statedb.AccountReads)                 // Account reads are complete, we can mark them
 		storageReadTimer.Update(statedb.StorageReads)                 // Storage reads are complete, we can mark them
@@ -1666,6 +1678,8 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 
 		blockExecutionTimer.Update(time.Since(substart) - trieproc - triehash)
 
+		//	fmt.Printf("Checkpoint 6: %v\n", time.Since(startz))
+		startz = time.Now()
 		// Validate the state using the default validator
 		substart = time.Now()
 		if err := bc.validator.ValidateState(block, statedb, receipts, usedGas); err != nil {
@@ -1675,11 +1689,15 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 		}
 		proctime := time.Since(start)
 
+		// fmt.Printf("Checkpoint 7: %v\n", time.Since(startz))
+		startz = time.Now()
 		// Update the metrics touched during block validation
 		accountHashTimer.Update(statedb.AccountHashes) // Account hashes are complete, we can mark them
 		storageHashTimer.Update(statedb.StorageHashes) // Storage hashes are complete, we can mark them
 		blockValidationTimer.Update(time.Since(substart) - (statedb.AccountHashes + statedb.StorageHashes - triehash))
 
+		// fmt.Printf("Checkpoint 8: %v\n", time.Since(startz))
+		startz = time.Now()
 		// Write the block to the chain and get the status.
 		substart = time.Now()
 		var status WriteStatus
@@ -1693,6 +1711,9 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 		if err != nil {
 			return it.index, err
 		}
+
+		// fmt.Printf("Checkpoint 9: %v\n", time.Since(startz))
+		startz = time.Now()
 		// Update the metrics touched during block commit
 		accountCommitTimer.Update(statedb.AccountCommits)   // Account commits are complete, we can mark them
 		storageCommitTimer.Update(statedb.StorageCommits)   // Storage commits are complete, we can mark them
@@ -1706,6 +1727,9 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 		stats.usedGas += usedGas
 
 		dirty, _ := bc.stateCache.TrieDB().Size()
+
+		// fmt.Printf("Checkpoint 10: %v\n", time.Since(startz))
+		_ = startz
 		stats.report(chain, it.index, dirty, setHead)
 
 		if !setHead {
@@ -2267,7 +2291,7 @@ func (bc *BlockChain) maintainTxIndex(ancients uint64) {
 	// need to reindex all necessary transactions before starting to process any
 	// pruning requests.
 	if ancients > 0 {
-		var from = uint64(0)
+		from := uint64(0)
 		if bc.txLookupLimit != 0 && ancients > bc.txLookupLimit {
 			from = ancients - bc.txLookupLimit
 		}
