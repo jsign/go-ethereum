@@ -107,6 +107,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/gballet/go-verkle => github.com/gballet/go-verkle v0.0.0-20230215200650-f92706434978
+replace github.com/gballet/go-verkle => github.com/gballet/go-verkle v0.0.0-20230215214211-703246ecfb1f
 
-replace github.com/crate-crypto/go-ipa => github.com/jsign/go-ipa v0.0.0-20230215161345-ef2305bb7112
+replace github.com/crate-crypto/go-ipa => github.com/jsign/go-ipa v0.0.0-20230215213932-c52c461f8ea7
