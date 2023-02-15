@@ -156,10 +156,9 @@ func (t *VerkleTrie) TryUpdateAccount(key []byte, acc *types.StateAccount) error
 }
 
 func (trie *VerkleTrie) TryUpdateStem(key []byte, values [][]byte) {
-	resolver :=
-		func(h []byte) ([]byte, error) {
-			return trie.db.diskdb.Get(h)
-		}
+	resolver := func(h []byte) ([]byte, error) {
+		return trie.db.diskdb.Get(h)
+	}
 	switch root := trie.root.(type) {
 	case *verkle.InternalNode:
 		root.InsertStem(key, values, resolver)
@@ -228,7 +227,7 @@ func (trie *VerkleTrie) TryDelete(key []byte) error {
 // Hash returns the root hash of the trie. It does not write to the database and
 // can be used even if the trie doesn't have one.
 func (trie *VerkleTrie) Hash() common.Hash {
-	return trie.root.Commit().Bytes()
+	return common.BytesToHash(trie.root.Commit().Bytes())
 }
 
 func nodeToDBKey(n verkle.VerkleNode) []byte {
@@ -318,7 +317,7 @@ func addKey(s set, key []byte) {
 
 func DeserializeAndVerifyVerkleProof(serialized []byte, root []byte, keyvals []verkle.KeyValuePair) error {
 	rootC := new(verkle.Point)
-	rootC.SetBytesTrusted(root)
+	rootC.SetBytes(root, true)
 	proof, cis, indices, yis, err := deserializeVerkleProof(serialized, rootC, keyvals)
 	if err != nil {
 		return fmt.Errorf("could not deserialize proof: %w", err)
