@@ -47,7 +47,7 @@ func init() {
 	//verkle.FromLEBytes(&getTreePolyIndex0Fr[0], []byte{2, 64})
 	//= cfg.CommitToPoly(getTreePolyIndex0Fr[:], 1)
 	getTreePolyIndex0Point = new(verkle.Point)
-	err := getTreePolyIndex0Point.SetBytes([]byte{34, 25, 109, 242, 193, 5, 144, 224, 76, 52, 189, 92, 197, 126, 9, 145, 27, 152, 199, 130, 165, 3, 210, 27, 193, 131, 142, 28, 110, 26, 16, 191})
+	err := getTreePolyIndex0Point.SetBytes([]byte{34, 25, 109, 242, 193, 5, 144, 224, 76, 52, 189, 92, 197, 126, 9, 145, 27, 152, 199, 130, 165, 3, 210, 27, 193, 131, 142, 28, 110, 26, 16, 191}, true)
 	if err != nil {
 		panic(err)
 	}
@@ -87,7 +87,6 @@ func GetTreeKey(address []byte, treeIndex *uint256.Int, subIndex byte) []byte {
 	ret.Add(ret, getTreePolyIndex0Point)
 
 	return PointToHash(ret, subIndex)
-
 }
 
 func GetTreeKeyAccountLeaf(address []byte, leaf byte) []byte {
@@ -194,7 +193,6 @@ func getTreeKeyWithEvaluatedAddess(evaluated *verkle.Point, treeIndex *uint256.I
 	ret.Add(ret, evaluated)
 
 	return PointToHash(ret, subIndex)
-
 }
 
 func EvaluateAddressPoint(address []byte) *verkle.Point {

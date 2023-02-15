@@ -28,7 +28,7 @@ func main() {
 	}
 
 	var root banderwagon.Element
-	root.SetBytes(rootHex)
+	root.SetBytesCompressed(rootHex, false)
 
 	var block types.Block
 	rlp.DecodeBytes(serializedBlock, &block)

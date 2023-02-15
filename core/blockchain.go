@@ -1017,7 +1017,7 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 		// a background routine to re-indexed all indices in [ancients - txlookupLimit, ancients)
 		// range. In this case, all tx indices of newly imported blocks should be
 		// generated.
-		var batch = bc.db.NewBatch()
+		batch := bc.db.NewBatch()
 		for i, block := range blockChain {
 			if bc.txLookupLimit == 0 || ancientLimit <= bc.txLookupLimit || block.NumberU64() >= ancientLimit-bc.txLookupLimit {
 				rawdb.WriteTxLookupEntriesByBlock(batch, block)
@@ -1613,7 +1613,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 		}
 		// perform the verkle fork if this is the fork block
 		if block.NumberU64() == 230081 {
-			proot := common.HexToHash("0x57c783c15b3e79dc2eb0d6a5d7d780936a2da4ce8ef842d64344c65dcd3a986e")
+			proot := common.HexToHash("0x28e53289db6d24182b4c39e7f325364eec2110332d8fa4e4e0d1983db2c58a24")
 			bc.SetVerkleFork(parent.Root, proot)
 		}
 		statedb, err := state.New(parent.Root, bc.stateCache, bc.snaps)
@@ -2267,7 +2267,7 @@ func (bc *BlockChain) maintainTxIndex(ancients uint64) {
 	// need to reindex all necessary transactions before starting to process any
 	// pruning requests.
 	if ancients > 0 {
-		var from = uint64(0)
+		from := uint64(0)
 		if bc.txLookupLimit != 0 && ancients > bc.txLookupLimit {
 			from = ancients - bc.txLookupLimit
 		}

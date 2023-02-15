@@ -102,7 +102,6 @@ func (t *VerkleTrie) TryGetAccount(key []byte) (*types.StateAccount, error) {
 	ck, err := t.TryGet(ckkey[:])
 	if err != nil {
 		return nil, fmt.Errorf("updateStateObject (%x) error: %v", key, err)
-
 	}
 	acc.CodeHash = ck
 
@@ -156,7 +155,6 @@ func (t *VerkleTrie) TryUpdateAccount(key []byte, acc *types.StateAccount) error
 }
 
 func (trie *VerkleTrie) TryUpdateStem(key []byte, values [][]byte) {
-
 	switch root := trie.root.(type) {
 	case *verkle.StatelessNode:
 		root.InsertAtStem(key, values, func(h []byte) ([]byte, error) {
@@ -228,7 +226,7 @@ func (trie *VerkleTrie) TryDelete(key []byte) error {
 // Hash returns the root hash of the trie. It does not write to the database and
 // can be used even if the trie doesn't have one.
 func (trie *VerkleTrie) Hash() common.Hash {
-	return trie.root.Commit().Bytes()
+	return common.BytesToHash(trie.root.Commit().Bytes())
 }
 
 func nodeToDBKey(n verkle.VerkleNode) []byte {
@@ -239,7 +237,7 @@ func nodeToDBKey(n verkle.VerkleNode) []byte {
 // Commit writes all nodes to the trie's memory database, tracking the internal
 // and external (for account tries) references.
 func (trie *VerkleTrie) Commit(onleaf LeafCallback) (common.Hash, int, error) {
-	flush := make(chan verkle.VerkleNode)
+	flush := make(chan verkle.VerkleNode, 64)
 	flusher := func(n verkle.VerkleNode) {
 		if onleaf != nil {
 			if leaf, isLeaf := n.(*verkle.LeafNode); isLeaf {
@@ -303,6 +301,7 @@ func (trie *VerkleTrie) Copy(db *Database) *VerkleTrie {
 		db:   db,
 	}
 }
+
 func (trie *VerkleTrie) IsVerkle() bool {
 	return true
 }
