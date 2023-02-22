@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -102,7 +103,6 @@ func (t *VerkleTrie) TryGetAccount(key []byte) (*types.StateAccount, error) {
 	ck, err := t.TryGet(ckkey[:])
 	if err != nil {
 		return nil, fmt.Errorf("updateStateObject (%x) error: %v", key, err)
-
 	}
 	acc.CodeHash = ck
 
@@ -156,7 +156,6 @@ func (t *VerkleTrie) TryUpdateAccount(key []byte, acc *types.StateAccount) error
 }
 
 func (trie *VerkleTrie) TryUpdateStem(key []byte, values [][]byte) {
-
 	switch root := trie.root.(type) {
 	case *verkle.StatelessNode:
 		root.InsertAtStem(key, values, func(h []byte) ([]byte, error) {
@@ -239,6 +238,8 @@ func nodeToDBKey(n verkle.VerkleNode) []byte {
 // Commit writes all nodes to the trie's memory database, tracking the internal
 // and external (for account tries) references.
 func (trie *VerkleTrie) Commit(onleaf LeafCallback) (common.Hash, int, error) {
+	lock.Lock()
+	defer lock.Unlock()
 	flush := make(chan verkle.VerkleNode)
 	flusher := func(n verkle.VerkleNode) {
 		if onleaf != nil {
@@ -272,13 +273,45 @@ func (trie *VerkleTrie) Commit(onleaf LeafCallback) (common.Hash, int, error) {
 			panic(err)
 		}
 
+		if value[0] == 1 {
+			internalNodesTotalCount++
+			internalNodesTotalBytes += int64(len(value))
+		} else if value[0] == 2 {
+			leafNodesTotalCount++
+			leafNodesTotalBytes += int64(len(value))
+		} else {
+			panic("unknown node type")
+		}
+
 		if err := trie.db.DiskDB().Put(nodeToDBKey(n), value); err != nil {
 			return common.Hash{}, commitCount, err
 		}
+		flushesTotalBytes += int64(len(value))
+	}
+
+	flushesTotalCount++
+
+	if flushesTotalCount%1024 == 0 {
+		fmt.Println()
+		fmt.Printf("Flushes      [Count: %d, TotalBytes: %d, AvgFlushBytes: %.02f, AvgNodesPerFlush: %d]\n", flushesTotalCount, flushesTotalBytes, float64(flushesTotalBytes)/float64(flushesTotalCount), (internalNodesTotalCount+leafNodesTotalCount)/flushesTotalCount)
+		fmt.Printf("InternalNode [Count: %d, TotalBytes: %d, AvgNodeBytes:  %.02f, AvgNodesPerFlush: %d]\n", internalNodesTotalCount, internalNodesTotalBytes, float64(internalNodesTotalBytes)/float64(internalNodesTotalCount), internalNodesTotalCount/flushesTotalCount)
+		fmt.Printf("LeafNode     [Count: %d, TotalBytes: %d, AvgNodeBytes:  %.02f, AvgNodesperFlush: %d]\n", leafNodesTotalCount, leafNodesTotalBytes, float64(leafNodesTotalBytes)/float64(leafNodesTotalCount), leafNodesTotalCount/flushesTotalCount)
 	}
 
 	return trie.Hash(), commitCount, nil
 }
+
+var (
+	lock sync.Mutex
+
+	flushesTotalCount int64
+	flushesTotalBytes int64
+
+	internalNodesTotalCount int64
+	internalNodesTotalBytes int64
+	leafNodesTotalCount     int64
+	leafNodesTotalBytes     int64
+)
 
 // NodeIterator returns an iterator that returns nodes of the trie. Iteration
 // starts at the key after the given start key.
@@ -303,6 +336,7 @@ func (trie *VerkleTrie) Copy(db *Database) *VerkleTrie {
 		db:   db,
 	}
 }
+
 func (trie *VerkleTrie) IsVerkle() bool {
 	return true
 }
