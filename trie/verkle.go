@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/crate-crypto/go-ipa/banderwagon"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethdb"
@@ -102,7 +103,6 @@ func (t *VerkleTrie) TryGetAccount(key []byte) (*types.StateAccount, error) {
 	ck, err := t.TryGet(ckkey[:])
 	if err != nil {
 		return nil, fmt.Errorf("updateStateObject (%x) error: %v", key, err)
-
 	}
 	acc.CodeHash = ck
 
@@ -156,7 +156,6 @@ func (t *VerkleTrie) TryUpdateAccount(key []byte, acc *types.StateAccount) error
 }
 
 func (trie *VerkleTrie) TryUpdateStem(key []byte, values [][]byte) {
-
 	switch root := trie.root.(type) {
 	case *verkle.StatelessNode:
 		root.InsertAtStem(key, values, func(h []byte) ([]byte, error) {
@@ -239,19 +238,15 @@ func nodeToDBKey(n verkle.VerkleNode) []byte {
 // Commit writes all nodes to the trie's memory database, tracking the internal
 // and external (for account tries) references.
 func (trie *VerkleTrie) Commit(onleaf LeafCallback) (common.Hash, int, error) {
-	flush := make(chan verkle.VerkleNode)
+	flushed := make(chan struct{})
+
+	nodes := make([]verkle.VerkleNode, 0, 1024)
+	nodesCommitments := make([]*verkle.Point, 0, 1024)
+	var nodeCount int
 	flusher := func(n verkle.VerkleNode) {
-		if onleaf != nil {
-			if leaf, isLeaf := n.(*verkle.LeafNode); isLeaf {
-				for i := 0; i < verkle.NodeWidth; i++ {
-					if leaf.Value(i) != nil {
-						comm := n.Commitment().Bytes()
-						onleaf(nil, nil, leaf.Value(i), common.BytesToHash(comm[:]))
-					}
-				}
-			}
-		}
-		flush <- n
+		nodeCount += 1
+		nodes = append(nodes, n)
+		nodesCommitments = append(nodesCommitments, n.Commitment())
 	}
 	go func() {
 		switch root := trie.root.(type) {
@@ -262,22 +257,38 @@ func (trie *VerkleTrie) Commit(onleaf LeafCallback) (common.Hash, int, error) {
 		default:
 			log.Crit("root was not flushed")
 		}
-		close(flush)
+		close(flushed)
 	}()
-	var commitCount int
-	for n := range flush {
-		commitCount += 1
-		value, err := n.Serialize()
-		if err != nil {
-			panic(err)
-		}
 
-		if err := trie.db.DiskDB().Put(nodeToDBKey(n), value); err != nil {
-			return common.Hash{}, commitCount, err
+	// Wait for all the flushing to finish.
+	<-flushed
+
+	// Batch node commitments calcualtion.
+	keys := banderwagon.ElementsToBytes(nodesCommitments)
+	// Batch node serializations.
+	nodeBytes, err := verkle.BatchSerialize(nodes)
+	if err != nil {
+		return common.Hash{}, 0, fmt.Errorf("serializing nodes: %s", err)
+	}
+
+	for i := range keys {
+		n := nodes[i]
+		if onleaf != nil {
+			if leaf, isLeaf := n.(*verkle.LeafNode); isLeaf {
+				for j := 0; j < verkle.NodeWidth; j++ {
+					if leaf.Value(j) != nil {
+						comm := keys[i]
+						onleaf(nil, nil, leaf.Value(j), common.BytesToHash(comm[:]))
+					}
+				}
+			}
+		}
+		if err := trie.db.DiskDB().Put(keys[i][:], nodeBytes[i]); err != nil {
+			return common.Hash{}, nodeCount, err
 		}
 	}
 
-	return trie.Hash(), commitCount, nil
+	return trie.Hash(), nodeCount, nil
 }
 
 // NodeIterator returns an iterator that returns nodes of the trie. Iteration
@@ -303,6 +314,7 @@ func (trie *VerkleTrie) Copy(db *Database) *VerkleTrie {
 		db:   db,
 	}
 }
+
 func (trie *VerkleTrie) IsVerkle() bool {
 	return true
 }
