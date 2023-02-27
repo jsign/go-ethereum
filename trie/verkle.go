@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/crate-crypto/go-ipa/banderwagon"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethdb"
@@ -238,57 +237,31 @@ func nodeToDBKey(n verkle.VerkleNode) []byte {
 // Commit writes all nodes to the trie's memory database, tracking the internal
 // and external (for account tries) references.
 func (trie *VerkleTrie) Commit(onleaf LeafCallback) (common.Hash, int, error) {
-	flushed := make(chan struct{})
-
-	nodes := make([]verkle.VerkleNode, 0, 1024)
-	nodesCommitments := make([]*verkle.Point, 0, 1024)
-	var nodeCount int
-	flusher := func(n verkle.VerkleNode) {
-		nodeCount += 1
-		nodes = append(nodes, n)
-		nodesCommitments = append(nodesCommitments, n.Commitment())
+	root, ok := trie.root.(*verkle.InternalNode)
+	if !ok {
+		return common.Hash{}, 0, errors.New("unexpected root node type")
 	}
-	go func() {
-		switch root := trie.root.(type) {
-		case *verkle.StatelessNode:
-			root.Flush(flusher)
-		case *verkle.InternalNode:
-			root.Flush(flusher)
-		default:
-			log.Crit("root was not flushed")
-		}
-		close(flushed)
-	}()
-
-	// Wait for all the flushing to finish.
-	<-flushed
-
-	// Batch node commitments calcualtion.
-	keys := banderwagon.ElementsToBytes(nodesCommitments)
-	// Batch node serializations.
-	nodeBytes, err := verkle.BatchSerialize(nodes)
+	nodes, err := root.BatchSerialize()
 	if err != nil {
-		return common.Hash{}, 0, fmt.Errorf("serializing nodes: %s", err)
+		return common.Hash{}, 0, fmt.Errorf("serializing tree nodes: %s", err)
 	}
 
-	for i := range keys {
-		n := nodes[i]
+	for _, node := range nodes {
 		if onleaf != nil {
-			if leaf, isLeaf := n.(*verkle.LeafNode); isLeaf {
+			if leaf, isLeaf := node.Node.(*verkle.LeafNode); isLeaf {
 				for j := 0; j < verkle.NodeWidth; j++ {
 					if leaf.Value(j) != nil {
-						comm := keys[i]
-						onleaf(nil, nil, leaf.Value(j), common.BytesToHash(comm[:]))
+						onleaf(nil, nil, leaf.Value(j), common.BytesToHash(node.CommitmentBytes[:]))
 					}
 				}
 			}
 		}
-		if err := trie.db.DiskDB().Put(keys[i][:], nodeBytes[i]); err != nil {
-			return common.Hash{}, nodeCount, err
+		if err := trie.db.DiskDB().Put(node.CommitmentBytes[:], node.SerializedBytes); err != nil {
+			return common.Hash{}, 0, fmt.Errorf("put node to disk: %s", err)
 		}
 	}
 
-	return trie.Hash(), nodeCount, nil
+	return nodes[0].CommitmentBytes, len(nodes), nil
 }
 
 // NodeIterator returns an iterator that returns nodes of the trie. Iteration
