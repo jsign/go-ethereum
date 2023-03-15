@@ -302,12 +302,12 @@ func (db *VerkleDB) OpenTrie(root common.Hash) (Trie, error) {
 	if root == (common.Hash{}) || root == emptyRoot {
 		return trie.NewVerkleTrie(verkle.New(), db.db), nil
 	}
-	payload, err := db.db.DiskDB().Get(root[:])
+	payload, err := db.db.DiskDB().Get(append([]byte("vkt-"), []byte{0xFF}...))
 	if err != nil {
 		return nil, err
 	}
 
-	r, err := verkle.ParseNode(payload, 0, root[:])
+	r, err := verkle.ParseNode(payload, 0, root[:], 0xFF)
 	if err != nil {
 		return nil, err
 	}

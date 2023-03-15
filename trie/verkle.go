@@ -230,8 +230,14 @@ func (trie *VerkleTrie) Hash() common.Hash {
 }
 
 func nodeToDBKey(n verkle.VerkleNode) []byte {
-	ret := n.Commitment().Bytes()
-	return ret[:]
+	switch n := n.(type) {
+	case *verkle.InternalNode:
+		return n.DbKeyBytes()
+	case *verkle.LeafNode:
+		return n.DbKeyBytes()
+	default:
+		panic("invalid node type")
+	}
 }
 
 // Commit writes all nodes to the trie's memory database, tracking the internal
@@ -256,7 +262,7 @@ func (trie *VerkleTrie) Commit(onleaf LeafCallback) (common.Hash, int, error) {
 				}
 			}
 		}
-		if err := trie.db.DiskDB().Put(node.CommitmentBytes[:], node.SerializedBytes); err != nil {
+		if err := trie.db.DiskDB().Put(node.StemPrefix, node.SerializedBytes); err != nil {
 			return common.Hash{}, 0, fmt.Errorf("put node to disk: %s", err)
 		}
 	}

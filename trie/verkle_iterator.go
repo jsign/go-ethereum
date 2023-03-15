@@ -41,7 +41,7 @@ func newVerkleNodeIterator(trie *VerkleTrie, start []byte) NodeIterator {
 		return new(nodeIterator)
 	}
 	it := &verkleNodeIterator{trie: trie, current: trie.root}
-	//it.err = it.seek(start)
+	// it.err = it.seek(start)
 	return it
 }
 
@@ -104,7 +104,7 @@ func (it *verkleNodeIterator) Next(descend bool) bool {
 		if err != nil {
 			panic(err)
 		}
-		it.current, err = verkle.ParseNode(data, byte(len(it.stack)-1), nodeToDBKey(node))
+		it.current, err = verkle.ParseNode(data, byte(len(it.stack)-1), nodeToDBKey(node), node.StemPrefix())
 		if err != nil {
 			panic(err)
 		}
@@ -188,7 +188,7 @@ func (it *verkleNodeIterator) LeafProof() [][]byte {
 		panic("LeafProof() called on an verkle node iterator not at a leaf location")
 	}
 
-	//return it.trie.Prove(leaf.Key())
+	// return it.trie.Prove(leaf.Key())
 	panic("not completely implemented")
 }
 
