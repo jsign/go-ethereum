@@ -149,10 +149,9 @@ func (t *VerkleTrie) TryUpdateAccount(key []byte, acc *types.StateAccount) error
 }
 
 func (trie *VerkleTrie) TryUpdateStem(key []byte, values [][]byte) error {
-	resolver :=
-		func(h []byte) ([]byte, error) {
-			return trie.db.diskdb.Get(h)
-		}
+	resolver := func(h []byte) ([]byte, error) {
+		return trie.db.diskdb.Get(h)
+	}
 	switch root := trie.root.(type) {
 	case *verkle.InternalNode:
 		return root.InsertStem(key, values, resolver)
@@ -184,7 +183,6 @@ func (t *VerkleTrie) TryDeleteAccount(key []byte) error {
 	)
 
 	for i := 0; i < verkle.NodeWidth; i++ {
-
 		values[i] = zero[:]
 	}
 
@@ -230,33 +228,22 @@ func nodeToDBKey(n verkle.VerkleNode) []byte {
 // Commit writes all nodes to the trie's memory database, tracking the internal
 // and external (for account tries) references.
 func (trie *VerkleTrie) Commit(_ bool) (common.Hash, *NodeSet, error) {
-	flush := make(chan verkle.VerkleNode)
-	resolver := func(n verkle.VerkleNode) {
-		flush <- n
+	root, ok := trie.root.(*verkle.InternalNode)
+	if !ok {
+		return common.Hash{}, nil, errors.New("unexpected root node type")
 	}
-	go func() {
-		switch root := trie.root.(type) {
-		case *verkle.InternalNode:
-			root.Flush(resolver)
-		case *verkle.StatelessNode:
-			root.Flush(resolver)
-		}
-		close(flush)
-	}()
-	var commitCount int
-	for n := range flush {
-		commitCount += 1
-		value, err := n.Serialize()
-		if err != nil {
-			panic(err)
-		}
+	nodes, err := root.BatchSerialize()
+	if err != nil {
+		return common.Hash{}, nil, fmt.Errorf("serializing tree nodes: %s", err)
+	}
 
-		if err := trie.db.diskdb.Put(nodeToDBKey(n), value); err != nil {
-			return common.Hash{}, NewNodeSet(common.Hash{}), err
+	for _, node := range nodes {
+		if err := trie.db.diskdb.Put(node.CommitmentBytes[:], node.SerializedBytes); err != nil {
+			return common.Hash{}, nil, fmt.Errorf("put node to disk: %s", err)
 		}
 	}
 
-	return trie.Hash(), NewNodeSet(common.Hash{}), nil
+	return nodes[0].CommitmentBytes, NewNodeSet(common.Hash{}), nil
 }
 
 // NodeIterator returns an iterator that returns nodes of the trie. Iteration
