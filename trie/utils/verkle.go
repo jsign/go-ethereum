@@ -40,6 +40,11 @@ var (
 	VerkleNodeWidth     = uint256.NewInt(256)
 	codeStorageDelta    = uint256.NewInt(0).Sub(CodeOffset, HeaderStorageOffset)
 
+	// BigInt versions of the above.
+	headerStorageOffsetBig = HeaderStorageOffset.ToBig()
+	mainStorageOffsetBig   = MainStorageOffset.ToBig()
+	verkleNodeWidthBig     = VerkleNodeWidth.ToBig()
+
 	getTreePolyIndex0Point *verkle.Point
 )
 
@@ -262,16 +267,25 @@ func EvaluateAddressPoint(address []byte) *verkle.Point {
 }
 
 func GetTreeKeyStorageSlotWithEvaluatedAddress(evaluated *verkle.Point, storageKey *uint256.Int) []byte {
-	pos := storageKey.Clone()
+	// Note that `pos` must be a big.Int and not a uint256.Int, because the subsequent
+	// arithmetics operations could overflow. (e.g: imagine if storageKey is 2^256-1)
+	pos := storageKey.ToBig()
 	if storageKey.Cmp(codeStorageDelta) < 0 {
-		pos.Add(HeaderStorageOffset, storageKey)
+		pos.Add(headerStorageOffsetBig, pos)
 	} else {
-		pos.Add(MainStorageOffset, storageKey)
+		pos.Add(mainStorageOffsetBig, pos)
 	}
-	treeIndex := new(uint256.Int).Div(pos, VerkleNodeWidth)
+	treeIndex, overflow := uint256.FromBig(pos.Div(pos, verkleNodeWidthBig))
+	if overflow { // Must never happen considering the EIP definition.
+		panic("tree index overflow")
+	}
 	// calculate the sub_index, i.e. the index in the stem tree.
 	// Because the modulus is 256, it's the last byte of treeIndex
-	subIndexMod := new(uint256.Int).Mod(pos, VerkleNodeWidth)
+	subIndexMod, overflow := uint256.FromBig(pos.Mod(pos, verkleNodeWidthBig))
+	if overflow { // Must never happen considering VerkleNodeWidth EIP definition.
+		panic("sub index overflow")
+	}
+
 	var subIndex byte
 	if len(subIndexMod) != 0 {
 		// uint256 is broken into 4 little-endian quads,
