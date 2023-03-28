@@ -215,7 +215,7 @@ func convertToVerkle(ctx *cli.Context) error {
 
 		// Save every slot into the tree
 		if !bytes.Equal(acc.Root, emptyRoot[:]) {
-			var translatedStorage = map[string][][]byte{}
+			translatedStorage := map[string][][]byte{}
 
 			storageIt, err := snaptree.StorageIterator(root, accIt.Hash(), common.Hash{})
 			if err != nil {
@@ -247,7 +247,7 @@ func convertToVerkle(ctx *cli.Context) error {
 				}
 
 				// Slot not in the header group, get its tree key
-				slotkey := tutils.GetTreeKeyStorageSlotWithEvaluatedAddress(addrPoint, slotnrbig)
+				slotkey := tutils.GetTreeKeyStorageSlotWithEvaluatedAddress(addrPoint, slotnr)
 
 				// Create the group if need be
 				values := translatedStorage[string(slotkey[:31])]

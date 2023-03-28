@@ -17,6 +17,7 @@
 package utils
 
 import (
+	"math/big"
 	"sync"
 
 	"github.com/crate-crypto/go-ipa/bandersnatch/fr"
@@ -44,6 +45,7 @@ var (
 	headerStorageOffsetBig = HeaderStorageOffset.ToBig()
 	mainStorageOffsetBig   = MainStorageOffset.ToBig()
 	verkleNodeWidthBig     = VerkleNodeWidth.ToBig()
+	codeStorageDeltaBig    = codeStorageDelta.ToBig()
 
 	getTreePolyIndex0Point *verkle.Point
 )
@@ -266,11 +268,11 @@ func EvaluateAddressPoint(address []byte) *verkle.Point {
 	return ret
 }
 
-func GetTreeKeyStorageSlotWithEvaluatedAddress(evaluated *verkle.Point, storageKey *uint256.Int) []byte {
+func GetTreeKeyStorageSlotWithEvaluatedAddress(evaluated *verkle.Point, storageKey []byte) []byte {
 	// Note that `pos` must be a big.Int and not a uint256.Int, because the subsequent
 	// arithmetics operations could overflow. (e.g: imagine if storageKey is 2^256-1)
-	pos := storageKey.ToBig()
-	if storageKey.Cmp(codeStorageDelta) < 0 {
+	pos := new(big.Int).SetBytes(storageKey)
+	if pos.Cmp(codeStorageDeltaBig) < 0 {
 		pos.Add(headerStorageOffsetBig, pos)
 	} else {
 		pos.Add(mainStorageOffsetBig, pos)
@@ -281,17 +283,7 @@ func GetTreeKeyStorageSlotWithEvaluatedAddress(evaluated *verkle.Point, storageK
 	}
 	// calculate the sub_index, i.e. the index in the stem tree.
 	// Because the modulus is 256, it's the last byte of treeIndex
-	subIndexMod, overflow := uint256.FromBig(pos.Mod(pos, verkleNodeWidthBig))
-	if overflow { // Must never happen considering VerkleNodeWidth EIP definition.
-		panic("sub index overflow")
-	}
+	subIndex := storageKey[len(storageKey)-1]
 
-	var subIndex byte
-	if len(subIndexMod) != 0 {
-		// uint256 is broken into 4 little-endian quads,
-		// each with native endianness. Extract the least
-		// significant byte.
-		subIndex = byte(subIndexMod[0])
-	}
 	return getTreeKeyWithEvaluatedAddess(evaluated, treeIndex, subIndex)
 }
