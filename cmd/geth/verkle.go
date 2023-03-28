@@ -215,7 +215,7 @@ func convertToVerkle(ctx *cli.Context) error {
 
 		// Save every slot into the tree
 		if !bytes.Equal(acc.Root, emptyRoot[:]) {
-			translatedStorage := map[string][][]byte{}
+			var translatedStorage = map[string][][]byte{}
 
 			storageIt, err := snaptree.StorageIterator(root, accIt.Hash(), common.Hash{})
 			if err != nil {
