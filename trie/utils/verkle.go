@@ -283,7 +283,8 @@ func GetTreeKeyStorageSlotWithEvaluatedAddress(evaluated *verkle.Point, storageK
 	}
 	// calculate the sub_index, i.e. the index in the stem tree.
 	// Because the modulus is 256, it's the last byte of treeIndex
-	subIndex := storageKey[len(storageKey)-1]
+	posBytes := pos.Bytes()
+	subIndex := posBytes[len(posBytes)-1]
 
 	return getTreeKeyWithEvaluatedAddess(evaluated, treeIndex, subIndex)
 }
