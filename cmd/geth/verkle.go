@@ -17,6 +17,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
@@ -792,10 +793,11 @@ func sortKeys(ctx *cli.Context) error {
 
 		// Merge the values
 		log.Info("Merging file", "name", file.Name())
-		file, _ := os.Create("sorted-" + file.Name())
+		file2, _ := os.Create("sorted-" + file.Name())
+		file := bufio.NewWriter(file2)
 		var (
 			stem   [31]byte
-			values = make([][]byte, 256)
+			values = make(map[int][]byte, 5)
 			last   [31]byte
 		)
 		if len(tuples) > 0 {
@@ -813,12 +815,17 @@ func sortKeys(ctx *cli.Context) error {
 				copy(kk, last[:])
 				leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: kk, Values: values})
 
+				if len(leavesData) > 1024*1024 {
+					leaves = append(leaves, verkle.BatchNewLeafNode(leavesData)...)
+					leavesData = leavesData[:0]
+				}
+
 				copy(last[:], stem[:])
-				values = make([][]byte, 256)
+				values = make(map[int][]byte, 5)
 			}
 
-			values[tuples[i][31]] = make([]byte, 32)
-			copy(values[tuples[i][31]], tuples[i][32:])
+			values[int(tuples[i][31])] = make([]byte, 32)
+			copy(values[int(tuples[i][31])], tuples[i][32:])
 		}
 
 		// dump the last group
@@ -826,17 +833,25 @@ func sortKeys(ctx *cli.Context) error {
 		binary.Write(file, binary.LittleEndian, values)
 		leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: stem[:], Values: values})
 
+		// Committing file
+		log.Info("Committing file", "name", file2.Name())
+
 		leaves = append(leaves, verkle.BatchNewLeafNode(leavesData)...)
 
-		// Committing file
-		log.Info("Committing file", "name", file.Name())
-
 		// Write sorted tuples back to file
-		log.Info("Writing file", "name", file.Name())
-		file.Close()
+		log.Info("Writing file", "name", file2.Name())
+		file.Flush()
+		file2.Close()
 	}
+
+	log.Info("Creating tree")
 	root := verkle.BatchInsertOrderedLeaves(leaves)
 	root.Commit()
+
+	log.Info("Serializing tree")
+	if _, err := root.BatchSerialize(); err != nil {
+		panic(err)
+	}
 
 	log.Info("Done", "root", fmt.Sprintf("%x", root.Commit().Bytes()))
 	log.Info("Finished", "elapsed", common.PrettyDuration(time.Since(start)))
