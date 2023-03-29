@@ -26,6 +26,7 @@ import (
 	"io/ioutil"
 	"os"
 	"runtime"
+	"runtime/pprof"
 	"sort"
 	"time"
 
@@ -732,11 +733,33 @@ func dumpKeys(ctx *cli.Context) error {
 }
 
 func sortKeys(ctx *cli.Context) error {
+	go func() {
+		for {
+			time.Sleep(time.Second * 30)
+			f2, err := os.Create("mem.out")
+			if err != nil {
+				panic(err)
+			}
+			if err := pprof.WriteHeapProfile(f2); err != nil {
+				panic(err)
+			}
+			f2.Close()
+		}
+	}()
+
+	f, err := os.Create("cpu.out")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
+
 	// Get list of files
 	files, _ := ioutil.ReadDir(".")
 	start := time.Now()
-	root := verkle.New()
 
+	var leaves []verkle.LeafNode
 	// Iterate over files
 	for _, file := range files {
 		// Check if file is a binary file
@@ -778,18 +801,18 @@ func sortKeys(ctx *cli.Context) error {
 		if len(tuples) > 0 {
 			copy(last[:], tuples[0][:31])
 		}
+
+		var leavesData []verkle.BatchNewLeafNodeData
 		for i := range tuples {
 			copy(stem[:], tuples[i][:31])
 			if stem != last {
 				binary.Write(file, binary.LittleEndian, last)
 				binary.Write(file, binary.LittleEndian, values)
 
-				var istem [31]byte
-				istem = last
-				err := root.(*verkle.InternalNode).InsertStem(istem[:], values, nil)
-				if err != nil {
-					panic(err)
-				}
+				kk := make([]byte, 31)
+				copy(kk, last[:])
+				leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: kk, Values: values})
+
 				copy(last[:], stem[:])
 				values = make([][]byte, 256)
 			}
@@ -801,19 +824,20 @@ func sortKeys(ctx *cli.Context) error {
 		// dump the last group
 		binary.Write(file, binary.LittleEndian, stem)
 		binary.Write(file, binary.LittleEndian, values)
-		err := root.(*verkle.InternalNode).InsertStem(stem[:], values, nil)
-		if err != nil {
-			panic(err)
-		}
+		leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: stem[:], Values: values})
+
+		leaves = append(leaves, verkle.BatchNewLeafNode(leavesData)...)
 
 		// Committing file
 		log.Info("Committing file", "name", file.Name())
-		root.Commit()
 
 		// Write sorted tuples back to file
 		log.Info("Writing file", "name", file.Name())
 		file.Close()
 	}
+	root := verkle.BatchInsertOrderedLeaves(leaves)
+	root.Commit()
+
 	log.Info("Done", "root", fmt.Sprintf("%x", root.Commit().Bytes()))
 	log.Info("Finished", "elapsed", common.PrettyDuration(time.Since(start)))
 	return nil
