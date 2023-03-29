@@ -812,6 +812,6 @@ func sortKeys(ctx *cli.Context) error {
 		log.Info("Writing file", "name", file.Name())
 		file.Close()
 	}
-	log.Info("Done", "root", root.Commit().Bytes())
+	log.Info("Done", "root", fmt.Sprintf("%x",root.Commit().Bytes()))
 	return nil
 }
