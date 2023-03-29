@@ -698,7 +698,7 @@ func dumpKeys(ctx *cli.Context) error {
 				}
 
 				// Slot not in the header group, get its tree key
-				slotkey := tutils.GetTreeKeyStorageSlotWithEvaluatedAddress(addrPoint, slotnrbig)
+				slotkey := tutils.GetTreeKeyStorageSlotWithEvaluatedAddress(addrPoint, slotnr)
 				// TODO cache du slotkey
 
 				slotfile := getFile(files, slotkey)
