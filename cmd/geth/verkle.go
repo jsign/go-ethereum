@@ -733,6 +733,7 @@ func dumpKeys(ctx *cli.Context) error {
 func sortKeys(ctx *cli.Context) error {
 	// Get list of files
 	files, _ := ioutil.ReadDir(".")
+	start      := time.Now()
 	root := verkle.New()
 
 	// Iterate over files
@@ -813,5 +814,6 @@ func sortKeys(ctx *cli.Context) error {
 		file.Close()
 	}
 	log.Info("Done", "root", fmt.Sprintf("%x",root.Commit().Bytes()))
+	log.Info("Finished", "elapsed", common.PrettyDuration(time.Since(start)))
 	return nil
 }
