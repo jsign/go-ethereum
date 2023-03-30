@@ -17,7 +17,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
@@ -758,7 +757,7 @@ func sortKeys(ctx *cli.Context) error {
 	pprof.StartCPUProfile(f)
 	defer pprof.StopCPUProfile()
 
-	numBatches := 16 // runtime.NumCPU()
+	numBatches := runtime.NumCPU()
 
 	// Get list of files
 	files, _ := ioutil.ReadDir(".")
@@ -771,8 +770,11 @@ func sortKeys(ctx *cli.Context) error {
 		if !bytes.HasSuffix([]byte(fname), []byte(".bin")) || bytes.HasPrefix([]byte(fname), []byte("sorted-")) || len(fname) != 6 {
 			continue
 		}
-		log.Info("Processing file", "name", file.Name())
+
+		log.Info("Reading file", "name", file.Name())
 		data, _ := ioutil.ReadFile(file.Name())
+
+		log.Info("Processing file", "name", file.Name())
 		numTuples := len(data) / 64
 		tuples := make([][64]byte, 0, numTuples)
 		reader := bytes.NewReader(data)
@@ -796,8 +798,6 @@ func sortKeys(ctx *cli.Context) error {
 
 		// Merge the values
 		log.Info("Merging file", "name", file.Name())
-		file2, _ := os.Create("sorted-" + file.Name())
-		file := bufio.NewWriter(file2)
 		var (
 			stem   [31]byte
 			values = make(map[int][]byte, 5)
@@ -808,14 +808,10 @@ func sortKeys(ctx *cli.Context) error {
 			copy(last[:], tuples[0][:31])
 			secondByteIdxs[int(last[1])] = 0
 		}
-
 		var leavesData []verkle.BatchNewLeafNodeData
 		for i := range tuples {
 			copy(stem[:], tuples[i][:31])
 			if stem != last {
-				binary.Write(file, binary.LittleEndian, last)
-				binary.Write(file, binary.LittleEndian, values)
-
 				kk := make([]byte, 31)
 				copy(kk, last[:])
 				leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: kk, Values: values})
@@ -830,15 +826,11 @@ func sortKeys(ctx *cli.Context) error {
 			values[int(tuples[i][31])] = make([]byte, 32)
 			copy(values[int(tuples[i][31])], tuples[i][32:])
 		}
-
 		// dump the last group
-		binary.Write(file, binary.LittleEndian, stem)
-		binary.Write(file, binary.LittleEndian, values)
 		leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: stem[:], Values: values})
 
 		// Committing file
-		log.Info("Committing file", "name", file2.Name())
-
+		log.Info("Building tree", "name", file.Name())
 		batchSize := len(secondByteIdxs) / numBatches
 		roots := make([]*verkle.InternalNode, numBatches)
 		var wg sync.WaitGroup
@@ -859,17 +851,12 @@ func sortKeys(ctx *cli.Context) error {
 		wg.Wait()
 
 		root := verkle.MergeLevelTwoPartitions(roots)
-		log.Info("Merged tree", "root", fmt.Sprintf("%x", root.Commit().Bytes()))
+		log.Info("Building tree finished", "root", fmt.Sprintf("%x", root.Commit().Bytes()))
 
 		log.Info("Serializing tree")
 		if _, err := root.BatchSerialize(); err != nil {
 			panic(err)
 		}
-
-		// Write sorted tuples back to file
-		log.Info("Writing file", "name", file2.Name())
-		file.Flush()
-		file2.Close()
 	}
 
 	log.Info("Finished", "elapsed", common.PrettyDuration(time.Since(start)))
