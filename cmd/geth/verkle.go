@@ -846,6 +846,7 @@ func sortKeys(ctx *cli.Context) error {
 				}
 				leaves := verkle.BatchNewLeafNode(leavesData[start:end])
 				roots[i] = verkle.BatchInsertOrderedLeaves(leaves)
+				roots[i].Commit()
 			}()
 		}
 		wg.Wait()
@@ -857,6 +858,8 @@ func sortKeys(ctx *cli.Context) error {
 		if _, err := root.BatchSerialize(); err != nil {
 			panic(err)
 		}
+
+		runtime.GC()
 	}
 
 	log.Info("Finished", "elapsed", common.PrettyDuration(time.Since(start)))
