@@ -734,6 +734,7 @@ func dumpKeys(ctx *cli.Context) error {
 }
 
 func sortKeys(ctx *cli.Context) error {
+	_ = verkle.GetConfig()
 	go func() {
 		for {
 			time.Sleep(time.Second * 30)
@@ -815,11 +816,6 @@ func sortKeys(ctx *cli.Context) error {
 				copy(kk, last[:])
 				leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: kk, Values: values})
 
-				if len(leavesData) > 1024*1024 {
-					leaves = append(leaves, verkle.BatchNewLeafNode(leavesData)...)
-					leavesData = leavesData[:0]
-				}
-
 				copy(last[:], stem[:])
 				values = make(map[int][]byte, 5)
 			}
@@ -836,7 +832,22 @@ func sortKeys(ctx *cli.Context) error {
 		// Committing file
 		log.Info("Committing file", "name", file2.Name())
 
-		leaves = append(leaves, verkle.BatchNewLeafNode(leavesData)...)
+		batches := runtime.NumCPU()
+		results := make(chan []verkle.LeafNode)
+		for i := 0; i < batches; i++ {
+			i := i
+			go func() {
+				start := i * len(leavesData) / batches
+				end := (i + 1) * len(leavesData) / batches
+				if i == batches-1 {
+					end = len(leavesData)
+				}
+				results <- verkle.BatchNewLeafNode(leavesData[start:end])
+			}()
+		}
+		for i := 0; i < batches; i++ {
+			leaves = append(leaves, <-results...)
+		}
 
 		// Write sorted tuples back to file
 		log.Info("Writing file", "name", file2.Name())
