@@ -29,6 +29,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/cmd/utils"
@@ -832,21 +833,26 @@ func sortKeys(ctx *cli.Context) error {
 		// Committing file
 		log.Info("Committing file", "name", file2.Name())
 
-		batches := runtime.NumCPU()
-		results := make(chan []verkle.LeafNode)
-		for i := 0; i < batches; i++ {
+		numBatches := runtime.NumCPU()
+		batchSize := len(leavesData) / numBatches
+		results := make([][]verkle.LeafNode, runtime.NumCPU())
+		var wg sync.WaitGroup
+		for i := 0; i < numBatches; i++ {
+			wg.Add(1)
 			i := i
 			go func() {
-				start := i * len(leavesData) / batches
-				end := (i + 1) * len(leavesData) / batches
-				if i == batches-1 {
+				defer wg.Done()
+				start := i * batchSize
+				end := (i + 1) * batchSize
+				if i == numBatches-1 {
 					end = len(leavesData)
 				}
-				results <- verkle.BatchNewLeafNode(leavesData[start:end])
+				results[i] = verkle.BatchNewLeafNode(leavesData[start:end])
 			}()
 		}
-		for i := 0; i < batches; i++ {
-			leaves = append(leaves, <-results...)
+		wg.Wait()
+		for _, compLeaves := range results {
+			leaves = append(leaves, compLeaves...)
 		}
 
 		// Write sorted tuples back to file
