@@ -734,19 +734,16 @@ func dumpKeys(ctx *cli.Context) error {
 
 func sortKeys(ctx *cli.Context) error {
 	_ = verkle.GetConfig()
-	go func() {
-		for {
-			time.Sleep(time.Second * 30)
-			f2, err := os.Create("mem.out")
-			if err != nil {
-				panic(err)
-			}
-			if err := pprof.WriteHeapProfile(f2); err != nil {
-				panic(err)
-			}
-			f2.Close()
-		}
-	}()
+	/*
+				f2, err := os.Create("mem.out")
+				if err != nil {
+					panic(err)
+				}
+				defer f2.Close()
+		if err := pprof.WriteHeapProfile(f2); err != nil {
+					panic(err)
+				}
+	*/
 
 	f, err := os.Create("cpu.out")
 	if err != nil {
@@ -789,32 +786,29 @@ func sortKeys(ctx *cli.Context) error {
 		// Merge the values
 		log.Info("Merging file", "name", file.Name())
 		var (
-			stem   [31]byte
+			stem   []byte
 			values = make(map[int][]byte, 5)
-			last   [31]byte
+			last   []byte
 		)
 		var secondByteIdxs [256]int
 		if len(tuples) > 0 {
-			copy(last[:], tuples[0][:31])
+			last = tuples[0][:31]
 			secondByteIdxs[int(last[1])] = 0
 		}
 		var leavesData []verkle.BatchNewLeafNodeData
 		for i := range tuples {
-			copy(stem[:], tuples[i][:31])
-			if stem != last {
-				kk := make([]byte, 31)
-				copy(kk, last[:])
-				leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: kk, Values: values})
+			stem = tuples[i][:31]
+			if !bytes.Equal(stem, last) {
+				leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: last, Values: values})
 
 				if stem[1] != last[1] {
 					secondByteIdxs[int(stem[1])] = len(leavesData)
 				}
-				copy(last[:], stem[:])
-				values = make(map[int][]byte, 5)
+				last = stem
+				values = make(map[int][]byte)
 			}
 
-			values[int(tuples[i][31])] = make([]byte, 32)
-			copy(values[int(tuples[i][31])], tuples[i][32:])
+			values[int(tuples[i][31])] = tuples[i][32:]
 		}
 		// dump the last group
 		leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: stem[:], Values: values})
