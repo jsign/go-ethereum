@@ -22,7 +22,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"runtime"
@@ -776,18 +775,9 @@ func sortKeys(ctx *cli.Context) error {
 
 		log.Info("Processing file", "name", file.Name())
 		numTuples := len(data) / 64
-		tuples := make([][64]byte, 0, numTuples)
-		reader := bytes.NewReader(data)
-		for {
-			var tuple [64]byte
-			err := binary.Read(reader, binary.LittleEndian, &tuple)
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			if err != nil {
-				panic(err)
-			}
-			tuples = append(tuples, tuple)
+		tuples := make([][]byte, numTuples)
+		for i := 0; i < numTuples; i++ {
+			tuples[i] = data[i*64 : (i+1)*64]
 		}
 
 		// Sort tuples by key
