@@ -846,7 +846,10 @@ func sortKeys(ctx *cli.Context) error {
 				}
 				leaves := verkle.BatchNewLeafNode(leavesData[start:end])
 				roots[i] = verkle.BatchInsertOrderedLeaves(leaves)
-				roots[i].Commit()
+
+				if _, err := roots[i].BatchSerialize(); err != nil {
+					panic(err)
+				}
 			}()
 		}
 		wg.Wait()
@@ -855,9 +858,6 @@ func sortKeys(ctx *cli.Context) error {
 		log.Info("Building tree finished", "root", fmt.Sprintf("%x", root.Commit().Bytes()))
 
 		log.Info("Serializing tree")
-		if _, err := root.BatchSerialize(); err != nil {
-			panic(err)
-		}
 
 		runtime.GC()
 	}
