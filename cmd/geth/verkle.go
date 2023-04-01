@@ -753,13 +753,20 @@ func sortKeys(ctx *cli.Context) error {
 	pprof.StartCPUProfile(f)
 	defer pprof.StopCPUProfile()
 
-	numBatches := runtime.NumCPU()
+	// Open database
+	stack, _ := makeConfigNode(ctx)
+	defer stack.Close()
+	chaindb := utils.MakeChainDatabase(ctx, stack, false)
+	if chaindb == nil {
+		return errors.New("nil chaindb")
+	}
+	// Run setup.
+	maxCPUs := runtime.NumCPU()
 
-	// Get list of files
-	files, _ := ioutil.ReadDir(".")
 	start := time.Now()
 
-	// Iterate over files
+	// List files and iterate on them
+	files, _ := ioutil.ReadDir(".")
 	for _, file := range files {
 		// Check if file is a binary file
 		fname := file.Name()
@@ -767,73 +774,37 @@ func sortKeys(ctx *cli.Context) error {
 			continue
 		}
 
-		log.Info("Reading file", "name", file.Name())
-		data, _ := ioutil.ReadFile(file.Name())
-
-		log.Info("Processing file", "name", file.Name())
-		numTuples := len(data) / 64
-		tuples := make([][]byte, numTuples)
-		for i := 0; i < numTuples; i++ {
-			tuples[i] = data[i*64 : (i+1)*64]
-		}
-
-		// Sort tuples by key
-		log.Info("Sorting file", "name", file.Name())
-		sort.Slice(tuples, func(i, j int) bool {
-			return bytes.Compare(tuples[i][:32], tuples[j][:32]) < 0
-		})
-
-		// Merge the values
-		log.Info("Merging file", "name", file.Name())
-		var (
-			stem   []byte
-			values = make(map[int][]byte, 5)
-			last   []byte
-		)
-		var secondByteIdxs [256]int
-		if len(tuples) > 0 {
-			last = tuples[0][:31]
-			secondByteIdxs[int(last[1])] = 0
-		}
-		var leavesData []verkle.BatchNewLeafNodeData
-		for i := range tuples {
-			stem = tuples[i][:31]
-			if !bytes.Equal(stem, last) {
-				leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: last, Values: values})
-
-				if stem[1] != last[1] {
-					secondByteIdxs[int(stem[1])] = len(leavesData)
-				}
-				last = stem
-				values = make(map[int][]byte)
-			}
-
-			values[int(tuples[i][31])] = tuples[i][32:]
-		}
-		// dump the last group
-		leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: stem[:], Values: values})
+		// Get a sorted list of all the leaves data ordered by key,
+		// and a slice of indexes of the second byte of each key for further patitioning.
+		leavesData, stem2ndByteIdxs := getSortedLeavesData(fname)
 
 		// Committing file
 		log.Info("Building tree", "name", file.Name())
-		batchSize := len(secondByteIdxs) / numBatches
-		roots := make([]*verkle.InternalNode, numBatches)
+		batchSize := len(stem2ndByteIdxs) / maxCPUs
+		roots := make([]*verkle.InternalNode, maxCPUs)
+		rootsNodes := make([][]verkle.SerializedNode, maxCPUs)
 		var wg sync.WaitGroup
-		for i := 0; i < numBatches; i++ {
+		for i := 0; i < maxCPUs; i++ {
 			wg.Add(1)
 			i := i
 			go func() {
 				defer wg.Done()
-				start := secondByteIdxs[i*batchSize]
+				start := stem2ndByteIdxs[i*batchSize]
 				end := len(leavesData)
-				if i < numBatches-1 {
-					end = secondByteIdxs[(i+1)*batchSize]
+				if i < maxCPUs-1 {
+					end = stem2ndByteIdxs[(i+1)*batchSize]
 				}
+
 				leaves := verkle.BatchNewLeafNode(leavesData[start:end])
 				roots[i] = verkle.BatchInsertOrderedLeaves(leaves)
 
-				if _, err := roots[i].BatchSerialize(); err != nil {
+				rootsNodes[i], err = roots[i].BatchSerialize()
+				if err != nil {
 					panic(err)
 				}
+				sort.Slice(rootsNodes[i], func(k, j int) bool {
+					return bytes.Compare(rootsNodes[i][k].CommitmentBytes[:], rootsNodes[i][k].CommitmentBytes[:]) < 0
+				})
 			}()
 		}
 		wg.Wait()
@@ -842,10 +813,64 @@ func sortKeys(ctx *cli.Context) error {
 		log.Info("Building tree finished", "root", fmt.Sprintf("%x", root.Commit().Bytes()))
 
 		log.Info("Serializing tree")
-
+		for k, nodes := range rootsNodes {
+			for _, node := range nodes {
+				if err := chaindb.Put(node.CommitmentBytes[:], node.SerializedBytes); err != nil {
+					log.Crit("put node to disk: %s", err)
+				}
+			}
+			rootsNodes[k] = nil
+		}
 		runtime.GC()
 	}
 
 	log.Info("Finished", "elapsed", common.PrettyDuration(time.Since(start)))
 	return nil
+}
+
+func getSortedLeavesData(fname string) ([]verkle.BatchNewLeafNodeData, [256]int) {
+	log.Info("Reading file", "name", fname)
+	data, _ := ioutil.ReadFile(fname)
+
+	log.Info("Processing file", "name", fname)
+	numTuples := len(data) / 64
+	tuples := make([][]byte, numTuples)
+	for i := 0; i < numTuples; i++ {
+		tuples[i] = data[i*64 : (i+1)*64]
+	}
+	// Sort tuples by key
+	log.Info("Sorting file", "name", fname)
+	sort.Slice(tuples, func(i, j int) bool {
+		return bytes.Compare(tuples[i][:32], tuples[j][:32]) < 0
+	})
+
+	// Merge the values
+	log.Info("Merging file", "name", fname)
+	var (
+		stem   []byte
+		values = make(map[int][]byte, 5)
+		last   []byte
+	)
+	var secondByteIdxs [256]int
+	if len(tuples) > 0 {
+		last = tuples[0][:31]
+		secondByteIdxs[int(last[1])] = 0
+	}
+	var leavesData []verkle.BatchNewLeafNodeData
+	for i := range tuples {
+		stem = tuples[i][:31]
+		if !bytes.Equal(stem, last) {
+			leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: last, Values: values})
+
+			if stem[1] != last[1] {
+				secondByteIdxs[int(stem[1])] = len(leavesData)
+			}
+			last = stem
+			values = make(map[int][]byte)
+		}
+
+		values[int(tuples[i][31])] = tuples[i][32:]
+	}
+	// dump the last group
+	return append(leavesData, verkle.BatchNewLeafNodeData{Stem: stem[:], Values: values}), secondByteIdxs
 }
