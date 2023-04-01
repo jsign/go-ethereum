@@ -18,6 +18,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -42,6 +43,7 @@ import (
 	"github.com/gballet/go-verkle"
 	"github.com/holiman/uint256"
 	cli "github.com/urfave/cli/v2"
+	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -761,8 +763,6 @@ func sortKeys(ctx *cli.Context) error {
 		return errors.New("nil chaindb")
 	}
 	// Run setup.
-	maxCPUs := runtime.NumCPU()
-
 	start := time.Now()
 
 	// List files and iterate on them
@@ -774,53 +774,62 @@ func sortKeys(ctx *cli.Context) error {
 			continue
 		}
 
-		// Get a sorted list of all the leaves data ordered by key,
-		// and a slice of indexes of the second byte of each key for further patitioning.
-		leavesData, stem2ndByteIdxs := getSortedLeavesData(fname)
+		// Read the file, partition in second-level subtrees, and push them into the channel to be processed.
+		secondLvlLeaves := make(chan []verkle.BatchNewLeafNodeData)
+		go func() {
+			if err := getSortedLeavesData(fname, secondLvlLeaves); err != nil {
+				log.Crit("Failed to get sorted leaves data", "error", err)
+			}
+			close(secondLvlLeaves)
+		}()
 
-		// Committing file
+		// Process secondLvlLeaves items and pipe the results to readyToSerializeSubtree.
 		log.Info("Building tree", "name", file.Name())
-		batchSize := len(stem2ndByteIdxs) / maxCPUs
-		roots := make([]*verkle.InternalNode, maxCPUs)
-		rootsNodes := make([][]verkle.SerializedNode, maxCPUs)
-		var wg sync.WaitGroup
-		for i := 0; i < maxCPUs; i++ {
-			wg.Add(1)
-			i := i
-			go func() {
-				defer wg.Done()
-				start := stem2ndByteIdxs[i*batchSize]
-				end := len(leavesData)
-				if i < maxCPUs-1 {
-					end = stem2ndByteIdxs[(i+1)*batchSize]
-				}
+		readyToSerializeSubtree := make(chan []verkle.SerializedNode)
+		var lock sync.Mutex
+		var roots []*verkle.InternalNode
+		go func() {
+			group, _ := errgroup.WithContext(context.Background())
+			group.SetLimit(runtime.NumCPU())
+			for leavesData := range secondLvlLeaves {
+				leavesData := leavesData
+				group.Go(func() error {
+					leaves := verkle.BatchNewLeafNode(leavesData)
+					root := verkle.BatchInsertOrderedLeaves(leaves)
+					nodes, err := root.BatchSerialize()
+					if err != nil {
+						return fmt.Errorf("failed to serialize nodes: %w", err)
+					}
+					sort.Slice(nodes, func(i, j int) bool {
+						return bytes.Compare(nodes[i].CommitmentBytes[:], nodes[j].CommitmentBytes[:]) < 0
+					})
+					lock.Lock()
+					roots = append(roots, root)
+					lock.Unlock()
 
-				leaves := verkle.BatchNewLeafNode(leavesData[start:end])
-				roots[i] = verkle.BatchInsertOrderedLeaves(leaves)
-
-				rootsNodes[i], err = roots[i].BatchSerialize()
-				if err != nil {
-					panic(err)
-				}
-				sort.Slice(rootsNodes[i], func(k, j int) bool {
-					return bytes.Compare(rootsNodes[i][k].CommitmentBytes[:], rootsNodes[i][k].CommitmentBytes[:]) < 0
+					readyToSerializeSubtree <- nodes
+					return nil
 				})
-			}()
-		}
-		wg.Wait()
+			}
+			if err := group.Wait(); err != nil {
+				log.Crit("Failed to build tree", "error", err)
+			}
+			close(readyToSerializeSubtree)
+		}()
 
-		root := verkle.MergeLevelTwoPartitions(roots)
-		log.Info("Building tree finished", "root", fmt.Sprintf("%x", root.Commit().Bytes()))
-
+		// Serialize items in readyToSerializeSubtree and save them to disk.
 		log.Info("Serializing tree")
-		for k, nodes := range rootsNodes {
+		for nodes := range readyToSerializeSubtree {
 			for _, node := range nodes {
 				if err := chaindb.Put(node.CommitmentBytes[:], node.SerializedBytes); err != nil {
 					log.Crit("put node to disk: %s", err)
 				}
 			}
-			rootsNodes[k] = nil
 		}
+
+		root := verkle.MergeLevelTwoPartitions(roots)
+		log.Info("Building tree finished", "root", fmt.Sprintf("%x", root.Commit().Bytes()))
+
 		runtime.GC()
 	}
 
@@ -828,9 +837,12 @@ func sortKeys(ctx *cli.Context) error {
 	return nil
 }
 
-func getSortedLeavesData(fname string) ([]verkle.BatchNewLeafNodeData, [256]int) {
+func getSortedLeavesData(fname string, secondLvlLeavesData chan []verkle.BatchNewLeafNodeData) error {
 	log.Info("Reading file", "name", fname)
-	data, _ := ioutil.ReadFile(fname)
+	data, err := ioutil.ReadFile(fname)
+	if err != nil {
+		return fmt.Errorf("failed to read file: %w", err)
+	}
 
 	log.Info("Processing file", "name", fname)
 	numTuples := len(data) / 64
@@ -851,19 +863,18 @@ func getSortedLeavesData(fname string) ([]verkle.BatchNewLeafNodeData, [256]int)
 		values = make(map[int][]byte, 5)
 		last   []byte
 	)
-	var secondByteIdxs [256]int
 	if len(tuples) > 0 {
 		last = tuples[0][:31]
-		secondByteIdxs[int(last[1])] = 0
 	}
+	// TODO(jsign): predict a bit good capacity.
 	var leavesData []verkle.BatchNewLeafNodeData
 	for i := range tuples {
 		stem = tuples[i][:31]
 		if !bytes.Equal(stem, last) {
 			leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: last, Values: values})
-
 			if stem[1] != last[1] {
-				secondByteIdxs[int(stem[1])] = len(leavesData)
+				secondLvlLeavesData <- leavesData
+				leavesData = make([]verkle.BatchNewLeafNodeData, 0, len(leavesData))
 			}
 			last = stem
 			values = make(map[int][]byte)
@@ -871,6 +882,8 @@ func getSortedLeavesData(fname string) ([]verkle.BatchNewLeafNodeData, [256]int)
 
 		values[int(tuples[i][31])] = tuples[i][32:]
 	}
-	// dump the last group
-	return append(leavesData, verkle.BatchNewLeafNodeData{Stem: stem[:], Values: values}), secondByteIdxs
+	leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: last, Values: values})
+	secondLvlLeavesData <- leavesData
+
+	return nil
 }
