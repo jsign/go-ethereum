@@ -28,7 +28,6 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"sort"
-	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/cmd/utils"
@@ -765,6 +764,7 @@ func sortKeys(ctx *cli.Context) error {
 	// Run setup.
 	start := time.Now()
 
+	var secondLevelCommitment [256][256][32]byte
 	// List files and iterate on them
 	files, _ := ioutil.ReadDir(".")
 	for _, file := range files {
@@ -786,8 +786,8 @@ func sortKeys(ctx *cli.Context) error {
 		// Process secondLvlLeaves items and pipe the results to readyToSerializeSubtree.
 		log.Info("Building tree", "name", file.Name())
 		readyToSerializeSubtree := make(chan []verkle.SerializedNode)
-		var lock sync.Mutex
-		var roots []*verkle.InternalNode
+		// var lock sync.Mutex
+		// var roots []*verkle.InternalNode
 		go func() {
 			group, _ := errgroup.WithContext(context.Background())
 			group.SetLimit(runtime.NumCPU())
@@ -796,6 +796,7 @@ func sortKeys(ctx *cli.Context) error {
 				group.Go(func() error {
 					leaves := verkle.BatchNewLeafNode(leavesData)
 					root := verkle.BatchInsertOrderedLeaves(leaves)
+					root.Commit()
 					nodes, err := root.BatchSerialize()
 					if err != nil {
 						return fmt.Errorf("failed to serialize nodes: %w", err)
@@ -803,10 +804,16 @@ func sortKeys(ctx *cli.Context) error {
 					sort.Slice(nodes, func(i, j int) bool {
 						return bytes.Compare(nodes[i].CommitmentBytes[:], nodes[j].CommitmentBytes[:]) < 0
 					})
-					lock.Lock()
-					roots = append(roots, root)
-					lock.Unlock()
+					// lock.Lock()
+					// roots = append(roots, root)
+					// lock.Unlock()
 
+					stem := leavesData[0].Stem
+					point, err := verkle.GetInternalNodeCommitment(root, stem[:2])
+					if err != nil {
+						log.Crit("Failed to get commitment", "error", err)
+					}
+					secondLevelCommitment[stem[0]][stem[1]] = point.Bytes()
 					readyToSerializeSubtree <- nodes
 					return nil
 				})
@@ -827,10 +834,23 @@ func sortKeys(ctx *cli.Context) error {
 			}
 		}
 
-		root := verkle.MergeLevelTwoPartitions(roots)
-		log.Info("Building tree finished", "root", fmt.Sprintf("%x", root.Commit().Bytes()))
+		// root := verkle.MergeLevelTwoPartitions(roots)
+		// log.Info("Building tree finished", "root", fmt.Sprintf("%x", root.Commit().Bytes()))
 
 		runtime.GC()
+	}
+
+	root := verkle.BuildFirstTwoLayers(secondLevelCommitment)
+	fmt.Printf("MARK\n")
+	log.Info("Building tree finished", "root", fmt.Sprintf("%x", root.Commit().Bytes()))
+	nodes, err := root.BatchSerialize()
+	if err != nil {
+		return fmt.Errorf("failed to serialize nodes: %w", err)
+	}
+	for _, node := range nodes {
+		if err := chaindb.Put(node.CommitmentBytes[:], node.SerializedBytes); err != nil {
+			log.Crit("put node to disk: %s", err)
+		}
 	}
 
 	log.Info("Finished", "elapsed", common.PrettyDuration(time.Since(start)))
