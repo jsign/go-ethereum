@@ -34,6 +34,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/state/snapshot"
+	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/internal/flags"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -826,10 +827,17 @@ func sortKeys(ctx *cli.Context) error {
 
 		// Serialize items in readyToSerializeSubtree and save them to disk.
 		log.Info("Serializing tree")
+		batch := chaindb.NewBatchWithSize(ethdb.IdealBatchSize)
 		for nodes := range readyToSerializeSubtree {
 			for _, node := range nodes {
-				if err := chaindb.Put(node.CommitmentBytes[:], node.SerializedBytes); err != nil {
+				if err := batch.Put(node.CommitmentBytes[:], node.SerializedBytes); err != nil {
 					log.Crit("put node to disk: %s", err)
+				}
+				if batch.ValueSize() > ethdb.IdealBatchSize {
+					if err := batch.Write(); err != nil {
+						log.Crit("write batch: %s", err)
+					}
+					batch.Reset()
 				}
 			}
 		}
@@ -841,7 +849,6 @@ func sortKeys(ctx *cli.Context) error {
 	}
 
 	root := verkle.BuildFirstTwoLayers(secondLevelCommitment)
-	fmt.Printf("MARK\n")
 	log.Info("Building tree finished", "root", fmt.Sprintf("%x", root.Commit().Bytes()))
 	nodes, err := root.BatchSerialize()
 	if err != nil {
