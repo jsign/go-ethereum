@@ -787,8 +787,6 @@ func sortKeys(ctx *cli.Context) error {
 		// Process secondLvlLeaves items and pipe the results to readyToSerializeSubtree.
 		log.Info("Building tree", "name", file.Name())
 		readyToSerializeSubtree := make(chan []verkle.SerializedNode)
-		// var lock sync.Mutex
-		// var roots []*verkle.InternalNode
 		go func() {
 			group, _ := errgroup.WithContext(context.Background())
 			group.SetLimit(runtime.NumCPU())
@@ -805,9 +803,6 @@ func sortKeys(ctx *cli.Context) error {
 					sort.Slice(nodes, func(i, j int) bool {
 						return bytes.Compare(nodes[i].CommitmentBytes[:], nodes[j].CommitmentBytes[:]) < 0
 					})
-					// lock.Lock()
-					// roots = append(roots, root)
-					// lock.Unlock()
 
 					stem := leavesData[0].Stem
 					point, err := verkle.GetInternalNodeCommitment(root, stem[:2])
@@ -841,9 +836,6 @@ func sortKeys(ctx *cli.Context) error {
 				}
 			}
 		}
-
-		// root := verkle.MergeLevelTwoPartitions(roots)
-		// log.Info("Building tree finished", "root", fmt.Sprintf("%x", root.Commit().Bytes()))
 
 		runtime.GC()
 	}
