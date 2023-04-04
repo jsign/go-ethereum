@@ -26,7 +26,6 @@ import (
 	"io/ioutil"
 	"os"
 	"runtime"
-	"runtime/pprof"
 	"sort"
 	"time"
 
@@ -735,47 +734,36 @@ func dumpKeys(ctx *cli.Context) error {
 }
 
 func sortKeys(ctx *cli.Context) error {
+	// Run precomp preparation now to avoid racing in paralell goroutines if the
+	// precomputed table doesn't exist.
 	_ = verkle.GetConfig()
-	/*
-				f2, err := os.Create("mem.out")
-				if err != nil {
-					panic(err)
-				}
-				defer f2.Close()
-		if err := pprof.WriteHeapProfile(f2); err != nil {
-					panic(err)
-				}
-	*/
 
-	f, err := os.Create("cpu.out")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
-
-	// Open database
+	// Open database.
 	stack, _ := makeConfigNode(ctx)
 	defer stack.Close()
 	chaindb := utils.MakeChainDatabase(ctx, stack, false)
 	if chaindb == nil {
 		return errors.New("nil chaindb")
 	}
-	// Run setup.
+
 	start := time.Now()
 
+	// The migration code converts trees partitioned by the first two bytes of
+	// the stem. We'll collect in secondLevelCommitment[a][b] the commitment of
+	// the InternalNode with stem [a, b, ...]. We'll then use this to build the
+	// first two layers of the tree.
 	var secondLevelCommitment [256][256][32]byte
+
 	// List files and iterate on them
 	files, _ := ioutil.ReadDir(".")
 	for _, file := range files {
 		// Check if file is a binary file
 		fname := file.Name()
-		if !bytes.HasSuffix([]byte(fname), []byte(".bin")) || bytes.HasPrefix([]byte(fname), []byte("sorted-")) || len(fname) != 6 {
+		if !bytes.HasSuffix([]byte(fname), []byte(".bin")) || len(fname) != 6 {
 			continue
 		}
 
-		// Read the file, partition in second-level subtrees, and push them into the channel to be processed.
+		// Read the file grouping leaves values by the first two bytes of the stem, and send them to secondLvlLeaves.
 		secondLvlLeaves := make(chan []verkle.BatchNewLeafNodeData)
 		go func() {
 			if err := getSortedLeavesData(fname, secondLvlLeaves); err != nil {
@@ -784,46 +772,66 @@ func sortKeys(ctx *cli.Context) error {
 			close(secondLvlLeaves)
 		}()
 
-		// Process secondLvlLeaves items and pipe the results to readyToSerializeSubtree.
+		// Process secondLvlLeaves items and pipe the results to serializedTrees.
 		log.Info("Building tree", "name", file.Name())
-		readyToSerializeSubtree := make(chan []verkle.SerializedNode)
+		serializedTrees := make(chan []verkle.SerializedNode)
 		go func() {
+			// We read from the channel, and allow up to runtime.CPU() goroutines to process the data.
+			// This tries to use the most amount of CPUs, while also puts some backpressure on the channel
+			// to avoid using too much memory.
 			group, _ := errgroup.WithContext(context.Background())
 			group.SetLimit(runtime.NumCPU())
 			for leavesData := range secondLvlLeaves {
 				leavesData := leavesData
 				group.Go(func() error {
+					// We generate the LeafNodes in an optimized way.
 					leaves := verkle.BatchNewLeafNode(leavesData)
+					// We do an optimized tree construction from all the leaves at once.
+					// Note this is a partial tree since all the keys have hte same first two bytes of the stem.
 					root := verkle.BatchInsertOrderedLeaves(leaves)
 					root.Commit()
+
+					// Serialize all the nodes of the generated tree, which takes advantage of many optimizations.
 					nodes, err := root.BatchSerialize()
 					if err != nil {
 						return fmt.Errorf("failed to serialize nodes: %w", err)
 					}
+
+					// Sort the serialized nodes by their CommitmentBytes, which tries to help the database with
+					// future compactions when inserting.
 					sort.Slice(nodes, func(i, j int) bool {
 						return bytes.Compare(nodes[i].CommitmentBytes[:], nodes[j].CommitmentBytes[:]) < 0
 					})
 
-					stem := leavesData[0].Stem
+					// Remember: this is a partial tree where all the keys have the same first two bytes of the stem.
+					// We collect now all the commitments of the InternalNodes with stem [a, b, ...]
+					// in secondLevelCommitment[a][b]. Note that each goroutine is working on a different
+					// place in the array, so there's no race-condition.
+					stem := leavesData[0].Stem // All the leaves have the same first 2-byte stem, take the first one.
 					point, err := verkle.GetInternalNodeCommitment(root, stem[:2])
 					if err != nil {
 						log.Crit("Failed to get commitment", "error", err)
 					}
 					secondLevelCommitment[stem[0]][stem[1]] = point.Bytes()
-					readyToSerializeSubtree <- nodes
+
+					// Send the nodes to serializedTrees which will write them to disk.
+					serializedTrees <- nodes
 					return nil
 				})
 			}
 			if err := group.Wait(); err != nil {
 				log.Crit("Failed to build tree", "error", err)
 			}
-			close(readyToSerializeSubtree)
+			close(serializedTrees)
 		}()
 
-		// Serialize items in readyToSerializeSubtree and save them to disk.
+		// We receive serialized nodes from serializedTrees and write them to disk.
+		// We batch them into presumably optimal batches. Note this also puts backpressure
+		// to the previous channels if we can't write fast enough. That's useful because
+		// there's no reason to use more memory if things are lagging behind. Disk is slow.
 		log.Info("Serializing tree")
 		batch := chaindb.NewBatchWithSize(ethdb.IdealBatchSize)
-		for nodes := range readyToSerializeSubtree {
+		for nodes := range serializedTrees {
 			for _, node := range nodes {
 				if err := batch.Put(node.CommitmentBytes[:], node.SerializedBytes); err != nil {
 					log.Crit("put node to disk: %s", err)
@@ -837,9 +845,12 @@ func sortKeys(ctx *cli.Context) error {
 			}
 		}
 
+		// Just make sure to GC before the next file, so there's a bound of ~4GiB of memory used.
 		runtime.GC()
 	}
 
+	// From all the commitments of the InternalNodes with stem [a, b, ...] we build
+	// and save the first two layers of the tree.
 	root := verkle.BuildFirstTwoLayers(secondLevelCommitment)
 	log.Info("Building tree finished", "root", fmt.Sprintf("%x", root.Commit().Bytes()))
 	nodes, err := root.BatchSerialize()
@@ -885,7 +896,6 @@ func getSortedLeavesData(fname string, secondLvlLeavesData chan []verkle.BatchNe
 	if len(tuples) > 0 {
 		last = tuples[0][:31]
 	}
-	// TODO(jsign): predict a bit good capacity.
 	var leavesData []verkle.BatchNewLeafNodeData
 	for i := range tuples {
 		stem = tuples[i][:31]
