@@ -890,7 +890,7 @@ func getSortedLeavesData(fname string, secondLvlLeavesData chan []verkle.BatchNe
 	log.Info("Merging file", "name", fname)
 	var (
 		stem   []byte
-		values = make(map[int][]byte, 5)
+		values = make(map[byte][]byte, 5)
 		last   []byte
 	)
 	if len(tuples) > 0 {
@@ -906,10 +906,10 @@ func getSortedLeavesData(fname string, secondLvlLeavesData chan []verkle.BatchNe
 				leavesData = make([]verkle.BatchNewLeafNodeData, 0, len(leavesData))
 			}
 			last = stem
-			values = make(map[int][]byte)
+			values = make(map[byte][]byte)
 		}
 
-		values[int(tuples[i][31])] = tuples[i][32:]
+		values[tuples[i][31]] = tuples[i][32:]
 	}
 	leavesData = append(leavesData, verkle.BatchNewLeafNodeData{Stem: last, Values: values})
 	secondLvlLeavesData <- leavesData
