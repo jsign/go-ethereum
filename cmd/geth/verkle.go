@@ -756,12 +756,13 @@ func sortKeys(ctx *cli.Context) error {
 
 	// List files and iterate on them
 	files, _ := ioutil.ReadDir(".")
-	for _, file := range files {
+	for fileIdx, file := range files {
 		// Check if file is a binary file
 		fname := file.Name()
 		if !bytes.HasSuffix([]byte(fname), []byte(".bin")) || len(fname) != 6 {
 			continue
 		}
+		startFile := time.Now()
 
 		// Read the file grouping leaves values by the first two bytes of the stem, and send them to secondLvlLeaves.
 		secondLvlLeaves := make(chan []verkle.BatchNewLeafNodeData)
@@ -847,6 +848,10 @@ func sortKeys(ctx *cli.Context) error {
 
 		// Just make sure to GC before the next file, so there's a bound of ~4GiB of memory used.
 		runtime.GC()
+
+		historyAvgPerFile := time.Since(start) / time.Duration(fileIdx+1)
+		timeLeft := common.PrettyDuration(historyAvgPerFile * time.Duration(len(files)-fileIdx-1))
+		log.Info("Subtree finished", "file", fname, "elapsed", common.PrettyDuration(time.Since(startFile)), "estimated_remaining", timeLeft.String())
 	}
 
 	// From all the commitments of the InternalNodes with stem [a, b, ...] we build
