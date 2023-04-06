@@ -137,10 +137,8 @@ github.com/garslo/gogen v0.0.0-20170306192744-1d203ffc1f61 h1:IZqZOB2fydHte3kUgx
 github.com/garslo/gogen v0.0.0-20170306192744-1d203ffc1f61/go.mod h1:Q0X6pkwTILDlzrGEckF6HKjXe48EgsY/l7K7vhY4MW8=
 github.com/gballet/go-libpcsclite v0.0.0-20190607065134-2772fd86a8ff h1:tY80oXqGNY4FhTFhk+o9oFHGINQ/+vhlm8HFzi6znCI=
 github.com/gballet/go-libpcsclite v0.0.0-20190607065134-2772fd86a8ff/go.mod h1:x7DCsMOv1taUwEWCzT4cmDeAkigA5/QCwUodaVOe8Ww=
-github.com/gballet/go-verkle v0.0.0-20230317174103-141354da6b11 h1:x4hiQFgr1SlqR4IoAZiXLFZK4L7KbibqkORqa1fwKp8=
-github.com/gballet/go-verkle v0.0.0-20230317174103-141354da6b11/go.mod h1:IyOnn1kujMWaT+wet/6Ix1BtvYwateOBy9puuWH/8sw=
-github.com/gballet/go-verkle v0.0.0-20230413135631-4bea2763ed0f h1:gP4uR2/1qx6hsIzbRI28JWcsVuP7xyjyj6SpLnoFobc=
-github.com/gballet/go-verkle v0.0.0-20230413135631-4bea2763ed0f/go.mod h1:P3bwGrLhsUNIsUDlq2yzMPvO1c/15oiB3JS85P+hNfw=
+github.com/gballet/go-verkle v0.0.0-20230406161123-14eaab595ed4 h1:C7DwAGkiiI07J0BuV2dmp+QSuURjuFlZVFKU0L/uong=
+github.com/gballet/go-verkle v0.0.0-20230406161123-14eaab595ed4/go.mod h1:IyOnn1kujMWaT+wet/6Ix1BtvYwateOBy9puuWH/8sw=
 github.com/getkin/kin-openapi v0.53.0/go.mod h1:7Yn5whZr5kJi6t+kShccXS8ae1APpYTW6yheSwk8Yi4=
 github.com/getkin/kin-openapi v0.61.0/go.mod h1:7Yn5whZr5kJi6t+kShccXS8ae1APpYTW6yheSwk8Yi4=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
@@ -257,6 +255,8 @@ github.com/jedisct1/go-minisign v0.0.0-20190909160543-45766022959e h1:UvSe12bq+U
 github.com/jedisct1/go-minisign v0.0.0-20190909160543-45766022959e/go.mod h1:G1CVv03EnqU1wYL2dFwXxW2An0az9JTl/ZsqXQeBlkU=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1/go.mod h1:L3OGu8Wl2/fWfCI6z80xFu9LTZmf1ZRjMHUOPmWr69U=
+github.com/jsign/go-ipa v0.0.0-20230323132738-cd121cd65e68 h1:w0ko/S0wlKJvv0uV70abNCxYd6fkiGUQqT93afrfcmM=
+github.com/jsign/go-ipa v0.0.0-20230323132738-cd121cd65e68/go.mod h1:gzbVz57IDJgQ9rLQwfSk696JGWof8ftznEL9GoAv3NI=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
 github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1:6v2b51hI/fHJwM22ozAgKL4VKDeJcHhJFhtBdhmNjmU=
 github.com/jstemmer/go-junit-report v0.9.1/go.mod h1:Brl9GWCQeLvo8nXZwPNNblvFj/XSXhF0NWZEnDohbsk=
