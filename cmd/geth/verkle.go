@@ -809,10 +809,7 @@ func sortKeys(ctx *cli.Context) error {
 					// in secondLevelCommitment[a][b]. Note that each goroutine is working on a different
 					// place in the array, so there's no race-condition.
 					stem := leavesData[0].Stem // All the leaves have the same first 2-byte stem, take the first one.
-					point, err := verkle.GetInternalNodeCommitment(root, stem[:2])
-					if err != nil {
-						log.Crit("Failed to get commitment", "error", err)
-					}
+					point := verkle.GetInternalNodeCommitment(root, stem[:2])
 					secondLevelCommitment[stem[0]][stem[1]] = point.Bytes()
 
 					// Send the nodes to serializedTrees which will write them to disk.
