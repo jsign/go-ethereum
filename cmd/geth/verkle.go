@@ -788,7 +788,7 @@ func sortKeys(ctx *cli.Context) error {
 					// We generate the LeafNodes in an optimized way.
 					leaves := verkle.BatchNewLeafNode(leavesData)
 					// We do an optimized tree construction from all the leaves at once.
-					// Note this is a partial tree since all the keys have hte same first two bytes of the stem.
+					// Note this is a partial tree since all the keys have the same first two bytes of the stem.
 					root := verkle.BatchInsertOrderedLeaves(leaves)
 					root.Commit()
 
