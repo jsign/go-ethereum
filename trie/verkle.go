@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	mrand "math/rand"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -236,6 +237,40 @@ func (trie *VerkleTrie) Commit(_ bool) (common.Hash, *NodeSet, error) {
 	if !ok {
 		return common.Hash{}, nil, errors.New("unexpected root node type")
 	}
+
+	// #### EXAMPLE OF RANDOM BASE TREE KEY/VALUE INSERTION ####
+	const migrationKeyValueCount = 1_000
+	randomKeyValues := genRandomKeyValues(migrationKeyValueCount)
+
+	// Create LeafNodes in batch mode.
+	nodeValues := make([]verkle.BatchNewLeafNodeData, 0, len(randomKeyValues))
+	curr := verkle.BatchNewLeafNodeData{
+		Stem:   randomKeyValues[0].key[:verkle.StemSize],
+		Values: map[byte][]byte{randomKeyValues[0].key[verkle.StemSize]: randomKeyValues[0].value},
+	}
+	for _, kv := range randomKeyValues[1:] {
+		if bytes.Equal(curr.Stem, kv.key[:verkle.StemSize]) {
+			curr.Values[kv.key[verkle.StemSize]] = kv.value
+			continue
+		}
+		nodeValues = append(nodeValues, curr)
+		curr = verkle.BatchNewLeafNodeData{
+			Stem:   kv.key[:verkle.StemSize],
+			Values: map[byte][]byte{kv.key[verkle.StemSize]: kv.value},
+		}
+	}
+	// Append last remaining node.
+	nodeValues = append(nodeValues, curr)
+
+	// Create all leaves in batch mode so we can optimize cryptography operations.
+	newLeaves := verkle.BatchNewLeafNode(nodeValues)
+	if err := root.InsertMigratedLeaves(newLeaves, func(h []byte) ([]byte, error) {
+		return trie.db.diskdb.Get(h)
+	}); err != nil {
+		return common.Hash{}, nil, fmt.Errorf("inserting migrated leaves: %s", err)
+	}
+	// #### END OF EXAMPLE ####
+
 	nodes, err := root.BatchSerialize()
 	if err != nil {
 		return common.Hash{}, nil, fmt.Errorf("serializing tree nodes: %s", err)
@@ -424,4 +459,22 @@ func ChunkifyCode(code []byte) ChunkedCode {
 	}
 
 	return chunks
+}
+
+type keyValue struct {
+	key   []byte
+	value []byte
+}
+
+var kvrand = mrand.New(mrand.NewSource(42))
+
+func genRandomKeyValues(count int) []keyValue {
+	ret := make([]keyValue, count)
+	for i := 0; i < count; i++ {
+		keyval := make([]byte, 64)
+		kvrand.Read(keyval)
+		ret[i].key = keyval[:32]
+		ret[i].value = keyval[32:]
+	}
+	return ret
 }
