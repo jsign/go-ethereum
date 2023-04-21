@@ -50,6 +50,12 @@ func NewVerkleTrie(root verkle.VerkleNode, db *Database, pointCache *utils.Point
 	}
 }
 
+func (trie *VerkleTrie) InsertMigratedLeaves(leaves []verkle.LeafNode) error {
+	return trie.root.(*verkle.InternalNode).InsertMigratedLeaves(leaves, func(hash []byte) ([]byte, error) {
+		return trie.db.diskdb.Get(hash)
+	})
+}
+
 var errInvalidProof = errors.New("invalid proof")
 
 // GetKey returns the sha3 preimage of a hashed key that was previously used

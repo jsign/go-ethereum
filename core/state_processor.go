@@ -18,8 +18,10 @@ package core
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus"
@@ -33,6 +35,9 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/trie"
+	tutils "github.com/ethereum/go-ethereum/trie/utils"
+	"github.com/gballet/go-verkle"
+	"github.com/holiman/uint256"
 )
 
 // StateProcessor is a basic Processor, which takes care of transitioning
@@ -96,6 +101,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	// N values from the MPT into the verkle tree.
 	if fdb, ok := statedb.Database().(*state.ForkingDB); ok {
 		if fdb.InTransition() {
+			now := time.Now()
 			// XXX overkill, just save the parent root in the forking db
 			tt := statedb.GetTrie().(*trie.TransitionTrie)
 			mpt := tt.Base()
@@ -109,14 +115,17 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 				return nil, nil, 0, err
 			}
 
-			maxMovedCount := 500
+			const maxMovedCount = 500
+			// mkv will be assiting in the collection of up to maxMovedCount key values to be migrated to the VKT.
+			// It has internal caches to do efficient MPT->VKT key calculations, which will be discarded after
+			// this function.
+			mkv := &keyValueMigrator{}
 			// move maxCount accounts into the verkle tree, starting with the
 			// slots from the previous account.
 			count := 0
 			for ; stIt.Next() && count < maxMovedCount; count++ {
 				slotnr := rawdb.ReadPreimage(statedb.Database().DiskDB(), stIt.Hash())
-
-				// @jsign: do your magic here adding the slot `slotnr`
+				mkv.addStorageSlot(fdb.LastAccHash, slotnr, stIt.Slot())
 			}
 
 			// if less than maxCount slots were moved, move to the next account
@@ -129,21 +138,21 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 					}
 					addr := rawdb.ReadPreimage(statedb.Database().DiskDB(), accIt.Hash())
 
-					// @jsign: do your magic here adding the account at `addr
+					mkv.addAccount(addr, acc)
 
 					// Store the account code if present
 					if !bytes.Equal(acc.CodeHash, emptyCode) {
 						code := rawdb.ReadCode(statedb.Database().DiskDB(), common.BytesToHash(acc.CodeHash))
 						chunks := trie.ChunkifyCode(code)
 
-						// @jsign: do your magic here with the code chunks
+						mkv.addAccountCode(addr, len(code), chunks)
 					}
 
 					if !bytes.Equal(acc.Root, emptyRoot[:]) {
 						for ; stIt.Next() && count < maxMovedCount; count++ {
 							slotnr := rawdb.ReadPreimage(statedb.Database().DiskDB(), stIt.Hash())
 
-							// @jsign do your magic here with extra slots
+							mkv.addStorageSlot(addr, slotnr, stIt.Slot())
 						}
 					}
 				}
@@ -158,6 +167,13 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 				fdb.LastAccHash = accIt.Hash()
 				fdb.LastSlotHash = stIt.Hash()
 			}
+			log.Info("Collected and prepared key values from base tree", "count", count, "duration", time.Since(now))
+
+			now = time.Now()
+			if err := mkv.migrateCollectedKeyValues(tt.Overlay()); err != nil {
+				return nil, nil, 0, fmt.Errorf("could not migrate key values: %w", err)
+			}
+			log.Info("Inserted key values in overlay tree", "count", count, "duration", time.Since(now))
 		}
 	}
 
@@ -232,4 +248,115 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	blockContext := NewEVMBlockContext(header, bc, author)
 	vmenv := vm.NewEVM(blockContext, vm.TxContext{}, statedb, config, cfg)
 	return applyTransaction(msg, config, author, gp, statedb, header.Number, header.Hash(), tx, usedGas, vmenv)
+}
+
+// keyValueMigrator is a helper struct that collects key-values from the base tree.
+// The walk is done in account order, so **we assume** the APIs hold this invariant. This is
+// useful to be smart about caching banderwagon.Points to make VKT key calculations faster.
+type keyValueMigrator struct {
+	currAddr      common.Address
+	currAddrPoint *verkle.Point
+
+	vktLeafData map[string]*verkle.BatchNewLeafNodeData
+}
+
+func (kvm *keyValueMigrator) addStorageSlot(addr common.Address, slotNumber []byte, slotValue []byte) {
+	addrPoint := kvm.getAddrPoint(addr)
+
+	vktKey := tutils.GetTreeKeyStorageSlotWithEvaluatedAddress(addrPoint, slotNumber)
+	leafNodeData := kvm.getOrInitLeafNodeData(vktKey)
+
+	leafNodeData.Values[vktKey[verkle.StemSize]] = slotValue
+}
+
+func (kvm *keyValueMigrator) addAccount(addr common.Address, acc *snapshot.Account) {
+	addrPoint := kvm.getAddrPoint(addr)
+
+	vktKey := tutils.GetTreeKeyVersionWithEvaluatedAddress(addrPoint)
+	leafNodeData := kvm.getOrInitLeafNodeData(vktKey)
+
+	var version [verkle.LeafValueSize]byte
+	leafNodeData.Values[tutils.VersionLeafKey] = version[:]
+
+	var balance [verkle.LeafValueSize]byte
+	for i, b := range acc.Balance.Bytes() {
+		balance[len(acc.Balance.Bytes())-1-i] = b
+	}
+	leafNodeData.Values[tutils.BalanceLeafKey] = balance[:]
+
+	var nonce [verkle.LeafValueSize]byte
+	binary.LittleEndian.PutUint64(nonce[:8], acc.Nonce)
+	leafNodeData.Values[tutils.NonceLeafKey] = balance[:]
+
+	leafNodeData.Values[tutils.CodeKeccakLeafKey] = acc.CodeHash[:]
+
+	// Code size is ignored here. If this isn't an EOA, the tree-walk will call
+	// addAccountCode with this information.
+}
+
+func (kvm *keyValueMigrator) addAccountCode(addr common.Address, codeSize uint64, chunks []byte) {
+	addrPoint := kvm.getAddrPoint(addr)
+
+	vktKey := tutils.GetTreeKeyVersionWithEvaluatedAddress(addrPoint)
+	leafNodeData := kvm.getOrInitLeafNodeData(vktKey)
+
+	// Save the code size.
+	var codeSizeBytes [verkle.LeafValueSize]byte
+	binary.LittleEndian.PutUint64(codeSizeBytes[:8], codeSize)
+	leafNodeData.Values[tutils.CodeSizeLeafKey] = codeSizeBytes[:]
+
+	// The first 128 chunks are stored in the account header leaf.
+	for i := 0; i < 128 && i < len(chunks)/32; i++ {
+		leafNodeData.Values[byte(128+i)] = chunks[32*i : 32*(i+1)]
+	}
+
+	// Potential further chunks, have their own leaf nodes.
+	for i := 128; i < len(chunks)/32; {
+		vktKey := tutils.GetTreeKeyCodeChunkWithEvaluatedAddress(addrPoint, uint256.NewInt(uint64(i)))
+		leafNodeData := kvm.getOrInitLeafNodeData(vktKey)
+
+		j := i
+		for ; (j-i) < 256 && j < len(chunks)/32; j++ {
+			leafNodeData.Values[byte((j-128)%256)] = chunks[32*j : 32*(j+1)]
+		}
+		i = j
+	}
+}
+
+func (kvm *keyValueMigrator) getAddrPoint(addr common.Address) *verkle.Point {
+	if addr == kvm.currAddr {
+		return kvm.currAddrPoint
+	}
+	kvm.currAddr = addr
+	kvm.currAddrPoint = tutils.EvaluateAddressPoint(addr.Bytes())
+	return kvm.currAddrPoint
+}
+
+func (kvm *keyValueMigrator) getOrInitLeafNodeData(stem []byte) *verkle.BatchNewLeafNodeData {
+	stemStr := string(stem)
+	if _, ok := kvm.vktLeafData[stemStr]; !ok {
+		kvm.vktLeafData[stemStr] = &verkle.BatchNewLeafNodeData{
+			Stem:   stem,
+			Values: make(map[byte][]byte),
+		}
+	}
+	return kvm.vktLeafData[stemStr]
+}
+
+func (kvm *keyValueMigrator) migrateCollectedKeyValues(tree *trie.VerkleTrie) error {
+	// Transform the map into a slice.
+	nodeValues := make([]verkle.BatchNewLeafNodeData, 0, len(kvm.vktLeafData))
+	for _, vld := range kvm.vktLeafData {
+		nodeValues = append(nodeValues, *vld)
+	}
+
+	// Create all leaves in batch mode so we can optimize cryptography operations.
+	newLeaves := verkle.BatchNewLeafNode(nodeValues)
+
+	// Insert into the tree.
+	if err := tree.InsertMigratedLeaves(newLeaves); err != nil {
+		return fmt.Errorf("failed to insert migrated leaves: %w", err)
+	}
+
+	return nil
 }
