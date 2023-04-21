@@ -109,17 +109,18 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 				return nil, nil, 0, err
 			}
 
-			// move N=500 accounts into the verkle tree, starting with the
+			maxMovedCount := 500
+			// move maxCount accounts into the verkle tree, starting with the
 			// slots from the previous account.
 			count := 0
-			for ; stIt.Next() && count < 500; count++ {
+			for ; stIt.Next() && count < maxMovedCount; count++ {
 				slotnr := rawdb.ReadPreimage(statedb.Database().DiskDB(), stIt.Hash())
 
 				// @jsign: do your magic here adding the slot `slotnr`
 			}
 
-			// if less than 500 slots were moved, move to the next account
-			for count < 500 {
+			// if less than maxCount slots were moved, move to the next account
+			for count < maxMovedCount {
 				if accIt.Next() {
 					acc, err := snapshot.FullAccount(accIt.Account())
 					if err != nil {
@@ -139,7 +140,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 					}
 
 					if !bytes.Equal(acc.Root, emptyRoot[:]) {
-						for ; stIt.Next() && count < 500; count++ {
+						for ; stIt.Next() && count < maxMovedCount; count++ {
 							slotnr := rawdb.ReadPreimage(statedb.Database().DiskDB(), stIt.Hash())
 
 							// @jsign do your magic here with extra slots
