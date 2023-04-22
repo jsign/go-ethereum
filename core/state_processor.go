@@ -123,9 +123,10 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 			// move maxCount accounts into the verkle tree, starting with the
 			// slots from the previous account.
 			count := 0
+			addr := rawdb.ReadPreimage(statedb.Database().DiskDB(), accIt.Hash())
 			for ; stIt.Next() && count < maxMovedCount; count++ {
 				slotnr := rawdb.ReadPreimage(statedb.Database().DiskDB(), stIt.Hash())
-				mkv.addStorageSlot(fdb.LastAccHash, slotnr, stIt.Slot())
+				mkv.addStorageSlot(addr, slotnr, stIt.Slot())
 			}
 
 			// if less than maxCount slots were moved, move to the next account
@@ -145,7 +146,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 						code := rawdb.ReadCode(statedb.Database().DiskDB(), common.BytesToHash(acc.CodeHash))
 						chunks := trie.ChunkifyCode(code)
 
-						mkv.addAccountCode(addr, len(code), chunks)
+						mkv.addAccountCode(addr, uint64(len(code)), chunks)
 					}
 
 					if !bytes.Equal(acc.Root, emptyRoot[:]) {
@@ -254,13 +255,13 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 // The walk is done in account order, so **we assume** the APIs hold this invariant. This is
 // useful to be smart about caching banderwagon.Points to make VKT key calculations faster.
 type keyValueMigrator struct {
-	currAddr      common.Address
+	currAddr      []byte
 	currAddrPoint *verkle.Point
 
 	vktLeafData map[string]*verkle.BatchNewLeafNodeData
 }
 
-func (kvm *keyValueMigrator) addStorageSlot(addr common.Address, slotNumber []byte, slotValue []byte) {
+func (kvm *keyValueMigrator) addStorageSlot(addr []byte, slotNumber []byte, slotValue []byte) {
 	addrPoint := kvm.getAddrPoint(addr)
 
 	vktKey := tutils.GetTreeKeyStorageSlotWithEvaluatedAddress(addrPoint, slotNumber)
@@ -269,7 +270,7 @@ func (kvm *keyValueMigrator) addStorageSlot(addr common.Address, slotNumber []by
 	leafNodeData.Values[vktKey[verkle.StemSize]] = slotValue
 }
 
-func (kvm *keyValueMigrator) addAccount(addr common.Address, acc *snapshot.Account) {
+func (kvm *keyValueMigrator) addAccount(addr []byte, acc snapshot.Account) {
 	addrPoint := kvm.getAddrPoint(addr)
 
 	vktKey := tutils.GetTreeKeyVersionWithEvaluatedAddress(addrPoint)
@@ -294,7 +295,7 @@ func (kvm *keyValueMigrator) addAccount(addr common.Address, acc *snapshot.Accou
 	// addAccountCode with this information.
 }
 
-func (kvm *keyValueMigrator) addAccountCode(addr common.Address, codeSize uint64, chunks []byte) {
+func (kvm *keyValueMigrator) addAccountCode(addr []byte, codeSize uint64, chunks []byte) {
 	addrPoint := kvm.getAddrPoint(addr)
 
 	vktKey := tutils.GetTreeKeyVersionWithEvaluatedAddress(addrPoint)
@@ -323,12 +324,12 @@ func (kvm *keyValueMigrator) addAccountCode(addr common.Address, codeSize uint64
 	}
 }
 
-func (kvm *keyValueMigrator) getAddrPoint(addr common.Address) *verkle.Point {
-	if addr == kvm.currAddr {
+func (kvm *keyValueMigrator) getAddrPoint(addr []byte) *verkle.Point {
+	if bytes.Equal(addr, kvm.currAddr) {
 		return kvm.currAddrPoint
 	}
 	kvm.currAddr = addr
-	kvm.currAddrPoint = tutils.EvaluateAddressPoint(addr.Bytes())
+	kvm.currAddrPoint = tutils.EvaluateAddressPoint(addr)
 	return kvm.currAddrPoint
 }
 
