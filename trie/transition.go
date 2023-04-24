@@ -38,6 +38,7 @@ func (t *TransitionTrie) Base() *SecureTrie {
 	return t.base
 }
 
+// TODO(gballet/jsign): consider removing this API.
 func (t *TransitionTrie) Overlay() *VerkleTrie {
 	return t.overlay
 }
