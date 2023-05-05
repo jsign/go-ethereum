@@ -1726,7 +1726,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 			return it.index, err
 		}
 		if fdb, ok := statedb.Database().(*state.ForkingDB); ok {
-			if fdb.InTransition() {
+			if fdb.InTransition() || fdb.Transitionned() {
 				bc.AddRootTranslation(block.Root(), statedb.IntermediateRoot(false))
 			}
 		}

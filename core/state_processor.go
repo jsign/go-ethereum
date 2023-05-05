@@ -106,7 +106,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 			tt := statedb.GetTrie().(*trie.TransitionTrie)
 			mpt := tt.Base()
 
-			accIt, err := statedb.Snaps().AccountIterator(mpt.Hash(), fdb.LastAccHash)
+			accIt, err := statedb.Snaps().AccountIterator(mpt.Hash(), fdb.CurrentAccountHash)
 			if err != nil {
 				return nil, nil, 0, err
 			}
