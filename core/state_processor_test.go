@@ -468,12 +468,35 @@ func TestExecuteChunkedContract(t *testing.T) {
 	chain, _, _, _ := GenerateVerkleChain(gspec.Config, genesis, ethash.NewFaker(), db, 2, func(i int, gen *BlockGen) {
 		switch i {
 		case 0:
+			repeat := byte(1)
 			// Create contract
-			code := common.FromHex(`6060604052600a8060106000396000f360606040526008565b00`)
-			tx, _ := types.SignTx(types.NewContractCreation(0, big.NewInt(16), 3000000, big.NewInt(875000000), code), signer, testKey)
+			code := []byte{
+				byte(vm.PUSH1), 255,
+				byte(vm.PUSH1), 12,
+				byte(vm.PUSH1), 4 + 3*repeat,
+				byte(vm.CODECOPY),
+				byte(vm.PUSH1), 255,
+				byte(vm.PUSH1), 4 + 3*repeat,
+				byte(vm.RETURN),
+				byte(vm.PC),
+				byte(vm.PUSH1), 4 + 3*(repeat-1),
+				byte(vm.JUMP),
+			}
+			for k := 0; k < 1; k++ {
+				code = append(code, []byte{
+					byte(vm.JUMPDEST),
+					byte(vm.PC),
+					byte(vm.ADD),
+				}...)
+			}
+			tx, _ := types.SignTx(types.NewContractCreation(0, big.NewInt(0), 1_000_000, big.NewInt(875000000), code), signer, testKey)
 			gen.AddTx(tx)
 		case 1:
 			// Execute contract
+			contractAddr := common.HexToAddress("0x3A220f351252089D385b29beca14e27F204c296A")
+			tx, _ := types.SignTx(types.NewTransaction(1, contractAddr, big.NewInt(0), 100_000, big.NewInt(875000000), nil), signer, testKey)
+			gen.AddTx(tx)
+
 		}
 	})
 
