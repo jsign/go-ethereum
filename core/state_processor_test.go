@@ -446,3 +446,58 @@ func TestProcessVerkle(t *testing.T) {
 		}
 	}
 }
+
+func TestExecuteChunkedContract(t *testing.T) {
+	config := getTestChainConfig()
+	signer := types.LatestSigner(config)
+	testKey, _ := crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	coinbase := common.HexToAddress("0x71562b71999873DB5b286dF957af199Ec94617F7")
+	gspec := &Genesis{
+		Config: config,
+		Alloc: GenesisAlloc{
+			coinbase: GenesisAccount{
+				Balance: big.NewInt(1000000000000000000), // 1 ether
+				Nonce:   0,
+			},
+		},
+	}
+	db := rawdb.NewMemoryDatabase()
+	bc, _ := NewBlockChain(db, nil, gspec, nil, ethash.NewFaker(), vm.Config{}, nil, nil)
+	genesis := gspec.MustCommit(db)
+
+	chain, _, _, _ := GenerateVerkleChain(gspec.Config, genesis, ethash.NewFaker(), db, 2, func(i int, gen *BlockGen) {
+		switch i {
+		case 0:
+			// Create contract
+			code := common.FromHex(`6060604052600a8060106000396000f360606040526008565b00`)
+			tx, _ := types.SignTx(types.NewContractCreation(0, big.NewInt(16), 3000000, big.NewInt(875000000), code), signer, testKey)
+			gen.AddTx(tx)
+		case 1:
+			// Execute contract
+		}
+	})
+
+	_, err := bc.InsertChain(chain)
+	if err != nil {
+		t.Fatalf("block imported with error: %v", err)
+	}
+}
+
+func getTestChainConfig() *params.ChainConfig {
+	return &params.ChainConfig{
+		ChainID:             big.NewInt(1),
+		HomesteadBlock:      big.NewInt(0),
+		EIP150Block:         big.NewInt(0),
+		EIP155Block:         big.NewInt(0),
+		EIP158Block:         big.NewInt(0),
+		ByzantiumBlock:      big.NewInt(0),
+		ConstantinopleBlock: big.NewInt(0),
+		PetersburgBlock:     big.NewInt(0),
+		IstanbulBlock:       big.NewInt(0),
+		MuirGlacierBlock:    big.NewInt(0),
+		BerlinBlock:         big.NewInt(0),
+		LondonBlock:         big.NewInt(0),
+		Ethash:              new(params.EthashConfig),
+		CancunBlock:         big.NewInt(0),
+	}
+}
