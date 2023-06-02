@@ -19,6 +19,7 @@ package core
 import (
 	//"bytes"
 	"crypto/ecdsa"
+	"encoding/binary"
 
 	//"fmt"
 	"math/big"
@@ -462,33 +463,12 @@ func TestExecuteChunkedContract(t *testing.T) {
 		},
 	}
 	db := rawdb.NewMemoryDatabase()
-	bc, _ := NewBlockChain(db, nil, gspec, nil, ethash.NewFaker(), vm.Config{}, nil, nil)
 	genesis := gspec.MustCommit(db)
 
-	chain, _, _, _ := GenerateVerkleChain(gspec.Config, genesis, ethash.NewFaker(), db, 2, func(i int, gen *BlockGen) {
+	_, _, _, _ = GenerateVerkleChain(gspec.Config, genesis, ethash.NewFaker(), db, 2, func(i int, gen *BlockGen) {
 		switch i {
 		case 0:
-			repeat := byte(1)
-			// Create contract
-			code := []byte{
-				byte(vm.PUSH1), 255,
-				byte(vm.PUSH1), 12,
-				byte(vm.PUSH1), 4 + 3*repeat,
-				byte(vm.CODECOPY),
-				byte(vm.PUSH1), 255,
-				byte(vm.PUSH1), 4 + 3*repeat,
-				byte(vm.RETURN),
-				byte(vm.PC),
-				byte(vm.PUSH1), 4 + 3*(repeat-1),
-				byte(vm.JUMP),
-			}
-			for k := 0; k < 1; k++ {
-				code = append(code, []byte{
-					byte(vm.JUMPDEST),
-					byte(vm.PC),
-					byte(vm.ADD),
-				}...)
-			}
+			code := createVerkleTreeJumpyContract(10, 3)
 			tx, _ := types.SignTx(types.NewContractCreation(0, big.NewInt(0), 1_000_000, big.NewInt(875000000), code), signer, testKey)
 			gen.AddTx(tx)
 		case 1:
@@ -499,11 +479,82 @@ func TestExecuteChunkedContract(t *testing.T) {
 
 		}
 	})
+}
 
-	_, err := bc.InsertChain(chain)
-	if err != nil {
-		t.Fatalf("block imported with error: %v", err)
+// createVerkleTreeJumpyContract creates some bytecode that deploys a
+// contract with teh following shape:
+// ┌─────────────────────┐
+// │   PUSH1 <offset>    │
+// │   JUMP          ────┼──┐
+// │                     │  │
+// │  ┌──────────────┐   │  │
+// │  │              │   │  │
+// │  │  WORK        │   │  │             WORK
+// │  │              │   │  │       ┌───────────────────────┐
+// │  └──────────────┘   │  │       │  JUMPDEST             │
+// │    ...              │  │       │  PC                   │
+// │                ◄────┼──┘       │  ADD                  │
+// │    ...              │          │                       │
+// │                     │          └───────────────────────┘
+// │    ...              │
+// │                     │
+// │  ┌──────────────┐   │
+// │  │              │   │
+// │  │ WORK         │   │
+// │  │              │   │
+// │  └──────────────┘   │
+// │                     │
+// └─────────────────────┘
+//
+// The idea is we can parametrize how many WORK sections we want, and we can
+// jump to any of them. Effectively, this means that for executing this contract
+// the EVM shouldn't need strictly all the contract bytecode, but only the parts
+// that are needed for execution (e.g: first chunk, and from jump point forward).
+//
+// Note: what WORK does is pretty dummy and irrelevant. It's just something.
+func createVerkleTreeJumpyContract(numWorkSections int, jumpToIthWorkSection int) []byte {
+	// workSectionBytecode is just a bytecode chunk that "does some work", and
+	// is jumpable from anywhere.
+	workSectionBytecode := []byte{
+		byte(vm.JUMPDEST),
+		byte(vm.PC),
+		byte(vm.ADD),
 	}
+	workSectionBytecodeSize := len(workSectionBytecode)
+
+	contractSize := 6 + workSectionBytecodeSize*numWorkSections // len(<entrypoint>) + WORK sections
+	var contractSizeBytes [4]byte
+	binary.BigEndian.PutUint32(contractSizeBytes[:], uint32(contractSize))
+
+	var jumpOffsetBytes [4]byte
+	binary.BigEndian.PutUint32(jumpOffsetBytes[:], uint32(jumpToIthWorkSection*workSectionBytecodeSize))
+
+	// Create contract that creates the contract.
+	code := []byte{
+		// <deploy contract code>
+		byte(vm.PUSH4), contractSizeBytes[0], contractSizeBytes[1], contractSizeBytes[2], contractSizeBytes[3],
+		byte(vm.PUSH1), 18, // 18 == len(<deploy contract code>)
+		byte(vm.PUSH1), 0,
+		byte(vm.CODECOPY),
+		byte(vm.PUSH4), contractSizeBytes[0], contractSizeBytes[1], contractSizeBytes[2], contractSizeBytes[3],
+		byte(vm.PUSH1), 0,
+		byte(vm.RETURN),
+		// </deploy contract code>
+
+		// <entrypoint>
+		byte(vm.PUSH1), jumpOffsetBytes[0], jumpOffsetBytes[1], jumpOffsetBytes[2], jumpOffsetBytes[3],
+		byte(vm.JUMP),
+		// </entrypoint>
+	}
+	for i := 0; i < numWorkSections; i++ {
+		code = append(code, []byte{
+			byte(vm.JUMPDEST),
+			byte(vm.PC),
+			byte(vm.ADD),
+		}...)
+	}
+
+	return code
 }
 
 func getTestChainConfig() *params.ChainConfig {
