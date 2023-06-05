@@ -17,6 +17,8 @@
 package vm
 
 import (
+	"fmt"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -127,7 +129,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 	in.returnData = nil
 
 	// Don't bother with the execution if there's no code.
-	if len(contract.Code) == 0 {
+	if len(contract.Code) == 0 && contract.CodeResolver == nil {
 		return nil, nil
 	}
 
@@ -175,16 +177,19 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 
 	// Evaluate one address per group of 256, 31-byte chunks
 	if in.evm.ChainConfig().IsCancun(in.evm.Context.BlockNumber) && !contract.IsDeployment {
-		contract.Chunks = trie.ChunkifyCode(contract.Code)
+		// TODO(stateless): this is a temporary "if" that we should fix.
+		if len(contract.Code) > 0 {
+			contract.Chunks = trie.ChunkifyCode(contract.Code)
 
-		totalEvals := len(contract.Code) / 31 / 256
-		if len(contract.Code)%(256*31) != 0 {
-			totalEvals += 1
-		}
+			totalEvals := len(contract.Code) / 31 / 256
+			if len(contract.Code)%(256*31) != 0 {
+				totalEvals += 1
+			}
 
-		chunkEvals = make([][]byte, totalEvals)
-		for i := 0; i < totalEvals; i++ {
-			chunkEvals[i] = utils.GetTreeKeyCodeChunkWithEvaluatedAddress(contract.AddressPoint(), uint256.NewInt(uint64(i)*256))
+			chunkEvals = make([][]byte, totalEvals)
+			for i := 0; i < totalEvals; i++ {
+				chunkEvals[i] = utils.GetTreeKeyCodeChunkWithEvaluatedAddress(contract.AddressPoint(), uint256.NewInt(uint64(i)*256))
+			}
 		}
 	}
 
@@ -206,7 +211,10 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 
 		// Get the operation from the jump table and validate the stack to ensure there are
 		// enough stack items available to perform the operation.
-		op = contract.GetOp(pc)
+		op, err = contract.GetOp(pc)
+		if err != nil {
+			return nil, fmt.Errorf("can't get opcode at pc %d: %w", pc, err)
+		}
 		operation := in.cfg.JumpTable[op]
 		cost = operation.constantGas // For tracing
 		// Validate stack

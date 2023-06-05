@@ -17,6 +17,7 @@
 package vm
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -45,6 +46,7 @@ func (ar AccountRef) Address() common.Address { return (common.Address)(ar) }
 
 // Contract represents an ethereum contract in the state database. It contains
 // the contract code, calling arguments. Contract implements ContractRef
+// TODO(jsign): search for references that do not call constructors.
 type Contract struct {
 	// CallerAddress is the result of the caller which initialised this
 	// contract. However when the "call method" is delegated this value
@@ -68,6 +70,14 @@ type Contract struct {
 
 	Gas   uint64
 	value *big.Int
+
+	CodeResolver CodeResolver
+	CodeSize     int
+}
+
+type CodeResolver interface {
+	GetAtPos(addr common.Address, pos uint64) (byte, error)
+	GetAtRange(addr common.Address, start, end uint64) ([]byte, error)
 }
 
 // NewContract returns a new contract environment for the execution of EVM.
@@ -90,18 +100,22 @@ func NewContract(caller ContractRef, object ContractRef, value *big.Int, gas uin
 	return c
 }
 
-func (c *Contract) validJumpdest(dest *uint256.Int) bool {
+func (c *Contract) validJumpdest(dest *uint256.Int) (bool, error) {
 	udest, overflow := dest.Uint64WithOverflow()
 	// PC cannot go beyond len(code) and certainly can't be bigger than 63bits.
 	// Don't bother checking for JUMPDEST in that case.
-	if overflow || udest >= uint64(len(c.Code)) {
-		return false
+	if overflow || udest >= uint64(c.CodeSize) {
+		return false, nil
 	}
 	// Only JUMPDESTs allowed for destinations
-	if OpCode(c.Code[udest]) != JUMPDEST {
-		return false
+	jumpedOpCode, err := c.CodeResolver.GetAtPos(*c.CodeAddr, udest)
+	if err != nil {
+		return false, fmt.Errorf("get opcode at JUMP destination: %s", err)
 	}
-	return c.IsCode(udest)
+	if OpCode(jumpedOpCode) != JUMPDEST {
+		return false, nil
+	}
+	return c.IsCode(udest), nil
 }
 
 // IsCode returns true if the provided PC location is an actual opcode, as
@@ -149,13 +163,21 @@ func (c *Contract) AsDelegate() *Contract {
 	return c
 }
 
-// GetOp returns the n'th element in the contract's byte array
-func (c *Contract) GetOp(n uint64) OpCode {
-	if n < uint64(len(c.Code)) {
-		return OpCode(c.Code[n])
+// GetOp returns the n'th element in the contract bytecode.
+func (c *Contract) GetOp(n uint64) (OpCode, error) {
+	if c.CodeResolver != nil {
+		op, err := c.CodeResolver.GetAtPos(*c.CodeAddr, n)
+		if err != nil {
+			return 0, fmt.Errorf("resolving opcode at %d: %w", n, err)
+		}
+		return OpCode(op), nil
 	}
 
-	return STOP
+	if n < uint64(len(c.Code)) {
+		return OpCode(c.Code[n]), nil
+	}
+
+	return STOP, nil
 }
 
 // Caller returns the caller of the contract.
@@ -201,10 +223,21 @@ func (c *Contract) SetCallCode(addr *common.Address, hash common.Hash, code []by
 	c.CodeAddr = addr
 }
 
+func (c *Contract) SetCallCodeFunc(addr *common.Address, hash common.Hash, codeResolver CodeResolver, codeSize int) {
+	c.CodeResolver = codeResolver
+	c.CodeHash = hash
+	c.CodeAddr = addr
+	c.CodeSize = codeSize
+}
+
 // SetCodeOptionalHash can be used to provide code, but it's optional to provide hash.
 // In case hash is not provided, the jumpdest analysis will not be saved to the parent context
 func (c *Contract) SetCodeOptionalHash(addr *common.Address, codeAndHash *codeAndHash) {
-	c.Code = codeAndHash.code
+	//c.Code = codeAndHash.code
 	c.CodeHash = codeAndHash.hash
 	c.CodeAddr = addr
+
+	allowedCodeRanges := [][2]uint64{{0, uint64(len(codeAndHash.code) - 1)}} // Simply allow accessing all the code.
+	c.CodeResolver = utils.NewRestrictedCodeResolver(codeAndHash.code, *addr, allowedCodeRanges)
+	c.CodeSize = len(codeAndHash.code)
 }

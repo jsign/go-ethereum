@@ -17,6 +17,7 @@
 package vm
 
 import (
+	"fmt"
 	"sync/atomic"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -374,7 +375,11 @@ func opCodeCopy(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([
 		uint64CodeOffset = 0xffffffffffffffff
 	}
 
-	paddedCodeCopy, copyOffset, nonPaddedCopyLength := getDataAndAdjustedBounds(scope.Contract.Code, uint64CodeOffset, length.Uint64())
+	code, err := scope.Contract.CodeResolver.GetAtRange(scope.Contract.Address(), uint64CodeOffset, uint64CodeOffset+length.Uint64()-1)
+	if err != nil {
+		return nil, fmt.Errorf("get code for codecopy: %s", err)
+	}
+	paddedCodeCopy, copyOffset, nonPaddedCopyLength := getDataAndAdjustedBounds(code, uint64CodeOffset, length.Uint64())
 	if interpreter.evm.chainConfig.IsCancun(interpreter.evm.Context.BlockNumber) {
 		scope.Contract.UseGas(touchEachChunksOnReadAndChargeGas(copyOffset, nonPaddedCopyLength, scope.Contract, scope.Contract.Code, interpreter.evm.Accesses, scope.Contract.IsDeployment))
 	}
@@ -468,6 +473,7 @@ func opExtCodeCopy(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext)
 	addr := common.Address(a.Bytes20())
 	if interpreter.evm.chainConfig.IsCancun(interpreter.evm.Context.BlockNumber) {
 		code := interpreter.evm.StateDB.GetCode(addr)
+		// TODO(jsign)
 		contract := &Contract{
 			Code:   code,
 			Chunks: trie.ChunkedCode(code),
@@ -633,7 +639,11 @@ func opJump(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byt
 		return nil, errStopToken
 	}
 	pos := scope.Stack.pop()
-	if !scope.Contract.validJumpdest(&pos) {
+	validJumpDest, err := scope.Contract.validJumpdest(&pos)
+	if err != nil {
+		return nil, fmt.Errorf("check valid JUMP destination: %s", err)
+	}
+	if !validJumpDest {
 		return nil, ErrInvalidJump
 	}
 	*pc = pos.Uint64() - 1 // pc will be increased by the interpreter loop
@@ -646,7 +656,11 @@ func opJumpi(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]by
 	}
 	pos, cond := scope.Stack.pop(), scope.Stack.pop()
 	if !cond.IsZero() {
-		if !scope.Contract.validJumpdest(&pos) {
+		validJumpDest, err := scope.Contract.validJumpdest(&pos)
+		if err != nil {
+			return nil, fmt.Errorf("check valid JUMP destination: %s", err)
+		}
+		if !validJumpDest {
 			return nil, ErrInvalidJump
 		}
 		*pc = pos.Uint64() - 1 // pc will be increased by the interpreter loop
@@ -1000,7 +1014,7 @@ func opPush1(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]by
 // make push instruction function
 func makePush(size uint64, pushByteSize int) executionFunc {
 	return func(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byte, error) {
-		codeLen := len(scope.Contract.Code)
+		codeLen := scope.Contract.CodeSize
 
 		startMin := codeLen
 		if int(*pc+1) < startMin {
@@ -1018,8 +1032,12 @@ func makePush(size uint64, pushByteSize int) executionFunc {
 		}
 
 		integer := new(uint256.Int)
-		scope.Stack.push(integer.SetBytes(common.RightPadBytes(
-			scope.Contract.Code[startMin:endMin], pushByteSize)))
+		valueBytes, err := scope.Contract.CodeResolver.GetAtRange(scope.Contract.Address(), uint64(startMin), uint64(endMin-1))
+		if err != nil {
+			return nil, fmt.Errorf("get PUSH values: %s", err)
+		}
+		valuePaddedBytes := common.RightPadBytes(valueBytes, pushByteSize)
+		scope.Stack.push(integer.SetBytes(valuePaddedBytes))
 
 		*pc += size
 		return nil, nil
