@@ -50,6 +50,8 @@ type BlockGen struct {
 
 	config *params.ChainConfig
 	engine consensus.Engine
+
+	codeResolver vm.CodeResolver
 }
 
 // SetCoinbase sets the coinbase of the generated block.
@@ -68,6 +70,10 @@ func (b *BlockGen) SetCoinbase(addr common.Address) {
 // SetExtra sets the extra data field of the generated block.
 func (b *BlockGen) SetExtra(data []byte) {
 	b.header.Extra = data
+}
+
+func (b *BlockGen) SetCodeResolver(resolver vm.CodeResolver) {
+	b.codeResolver = resolver
 }
 
 // SetNonce sets the nonce field of the generated block.
@@ -107,7 +113,7 @@ func (b *BlockGen) AddTxWithChain(bc *BlockChain, tx *types.Transaction) {
 		b.SetCoinbase(common.Address{})
 	}
 	b.statedb.Prepare(tx.Hash(), len(b.txs))
-	receipt, err := ApplyTransaction(b.config, bc, &b.header.Coinbase, b.gasPool, b.statedb, b.header, tx, &b.header.GasUsed, vm.Config{})
+	receipt, err := ApplyTransaction(b.config, bc, &b.header.Coinbase, b.gasPool, b.statedb, b.header, tx, &b.header.GasUsed, vm.Config{}, b.codeResolver)
 	if err != nil {
 		panic(err)
 	}

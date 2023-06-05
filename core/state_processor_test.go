@@ -36,6 +36,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/trie/utils"
 
 	//"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
@@ -465,46 +466,80 @@ func TestExecuteChunkedContract(t *testing.T) {
 	db := rawdb.NewMemoryDatabase()
 	genesis := gspec.MustCommit(db)
 
-	_, _, _, _ = GenerateVerkleChain(gspec.Config, genesis, ethash.NewFaker(), db, 2, func(i int, gen *BlockGen) {
+	numWorkChunks := 10
+	jumpToNthChunk := 3
+	deploymentContractCode, contractCode := createVerkleTreeJumpyContract(numWorkChunks, jumpToNthChunk)
+	_, receipts, _, _ := GenerateVerkleChain(gspec.Config, genesis, ethash.NewFaker(), db, 2, func(i int, gen *BlockGen) {
 		switch i {
 		case 0:
-			code := createVerkleTreeJumpyContract(10, 3)
-			tx, _ := types.SignTx(types.NewContractCreation(0, big.NewInt(0), 1_000_000, big.NewInt(875000000), code), signer, testKey)
+			tx, _ := types.SignTx(types.NewContractCreation(0, big.NewInt(0), 1_000_000, big.NewInt(875000000), deploymentContractCode), signer, testKey)
 			gen.AddTx(tx)
 		case 1:
-			// Execute contract
+			// Execute contract that we created in previous block.
+			// The address is hardcoded since the execution is deterministic.
 			contractAddr := common.HexToAddress("0x3A220f351252089D385b29beca14e27F204c296A")
+
+			// Note that numWorkChunks and jumptoNthChunk perfectly describe which **subset** of the contractCode will be
+			// executed. For example if jumpToNthChunk=100, then a big part of the initial bytecode of the contract
+			// **must never** be asked by the EVM. The resolver will return an error if it's asked to provide that code.
+			entryPointSize := uint64(6)
+			workSectionBytecodeSize := uint64(3) // See createVerkleTreeJumpyContract <work section>
+			allowedRanges := [][2]uint64{
+				// Always allow the <entrypoint> section.
+				{0, entryPointSize - 1},
+				// Allow bytecode ranges from the jumping point forward. Any other code between the entrypoint and
+				// the jumping point won't be allowed to be executed. If we get asked for it, the resolver will error.
+				{entryPointSize + (workSectionBytecodeSize * uint64(jumpToNthChunk)), uint64(len(contractCode))},
+			}
+			resolver := utils.NewRestrictedCodeResolver(contractCode, contractAddr, allowedRanges)
+
 			tx, _ := types.SignTx(types.NewTransaction(1, contractAddr, big.NewInt(0), 100_000, big.NewInt(875000000), nil), signer, testKey)
+			gen.SetCodeResolver(resolver)
 			gen.AddTx(tx)
 
 		}
 	})
+
+	for i, receipt := range receipts {
+		if len(receipt) != 1 {
+			t.Fatal("expected only one receipt per block")
+		}
+		if receipt[0].Status != types.ReceiptStatusSuccessful {
+			t.Fatalf("receipt at block %d failed", i)
+		}
+	}
 }
 
 // createVerkleTreeJumpyContract creates some bytecode that deploys a
 // contract with teh following shape:
-// ┌─────────────────────┐
-// │   PUSH1 <offset>    │
-// │   JUMP          ────┼──┐
-// │                     │  │
-// │  ┌──────────────┐   │  │
-// │  │              │   │  │
-// │  │  WORK        │   │  │             WORK
-// │  │              │   │  │       ┌───────────────────────┐
-// │  └──────────────┘   │  │       │  JUMPDEST             │
-// │    ...              │  │       │  PC                   │
-// │                ◄────┼──┘       │  ADD                  │
-// │    ...              │          │                       │
-// │                     │          └───────────────────────┘
-// │    ...              │
-// │                     │
-// │  ┌──────────────┐   │
-// │  │              │   │
-// │  │ WORK         │   │
-// │  │              │   │
-// │  └──────────────┘   │
-// │                     │
-// └─────────────────────┘
+//
+//	┌─────────────────────┐
+//	│                     │
+//	│     ENTRYPOINT      │        ┼
+//	│  ┌──────────────┐   │
+//	│  │PUSH1 42      │   │
+//	│  │PUSH4 <offset>│   │
+//	│  │JUMP          ├───┼──┐
+//	│  └──────────────┘   │  │
+//	│                     │  │
+//	│  ┌──────────────┐   │  │
+//	│  │              │   │  │
+//	│  │  WORK        │   │  │             WORK
+//	│  │              │   │  │       ┌───────────────────────┐
+//	│  └──────────────┘   │  │       │  JUMPDEST             │
+//	│    ...              │  │       │  PUSH1 1              │
+//	│                ◄────┼──┘       │  ADD                  │
+//	│    ...              │          │                       │
+//	│                     │          └───────────────────────┘
+//	│    ...              │
+//	│                     │
+//	│  ┌──────────────┐   │
+//	│  │              │   │
+//	│  │ WORK         │   │
+//	│  │              │   │
+//	│  └──────────────┘   │
+//	│                     │
+//	└─────────────────────┘
 //
 // The idea is we can parametrize how many WORK sections we want, and we can
 // jump to any of them. Effectively, this means that for executing this contract
@@ -512,49 +547,60 @@ func TestExecuteChunkedContract(t *testing.T) {
 // that are needed for execution (e.g: first chunk, and from jump point forward).
 //
 // Note: what WORK does is pretty dummy and irrelevant. It's just something.
-func createVerkleTreeJumpyContract(numWorkSections int, jumpToIthWorkSection int) []byte {
+//
+// There're two return parameters:
+// 1. The first one is the bytecode that deploys the contract (i.e: to be used in contract creation transaction).
+// 2. The second one is the actual contract bytecode (i.e: that will be used when executing the contract).
+func createVerkleTreeJumpyContract(numWorkSections int, jumpToNthWorkSection int) ([]byte, []byte) {
 	// workSectionBytecode is just a bytecode chunk that "does some work", and
 	// is jumpable from anywhere.
 	workSectionBytecode := []byte{
 		byte(vm.JUMPDEST),
-		byte(vm.PC),
-		byte(vm.ADD),
+		byte(vm.PUSH1), 0x1,
+		byte(vm.ADD), // count++
+
 	}
 	workSectionBytecodeSize := len(workSectionBytecode)
 
-	contractSize := 6 + workSectionBytecodeSize*numWorkSections // len(<entrypoint>) + WORK sections
+	lenEntrypointSection := 8   // len(<entrypoint>)
+	lenDeployContractCode := 18 // len(<deploy contract code>)
+
+	contractSize := lenEntrypointSection + workSectionBytecodeSize*numWorkSections
 	var contractSizeBytes [4]byte
 	binary.BigEndian.PutUint32(contractSizeBytes[:], uint32(contractSize))
 
-	var jumpOffsetBytes [4]byte
-	binary.BigEndian.PutUint32(jumpOffsetBytes[:], uint32(jumpToIthWorkSection*workSectionBytecodeSize))
-
 	// Create contract that creates the contract.
-	code := []byte{
+	deploymentCode := []byte{
 		// <deploy contract code>
 		byte(vm.PUSH4), contractSizeBytes[0], contractSizeBytes[1], contractSizeBytes[2], contractSizeBytes[3],
-		byte(vm.PUSH1), 18, // 18 == len(<deploy contract code>)
+		byte(vm.PUSH1), byte(lenDeployContractCode),
 		byte(vm.PUSH1), 0,
 		byte(vm.CODECOPY),
 		byte(vm.PUSH4), contractSizeBytes[0], contractSizeBytes[1], contractSizeBytes[2], contractSizeBytes[3],
 		byte(vm.PUSH1), 0,
 		byte(vm.RETURN),
 		// </deploy contract code>
+	}
 
+	var jumpOffsetBytes [4]byte
+	jumpPC := lenEntrypointSection + workSectionBytecodeSize*jumpToNthWorkSection
+	binary.BigEndian.PutUint32(jumpOffsetBytes[:], uint32(jumpPC))
+	entryPointCode := []byte{
 		// <entrypoint>
-		byte(vm.PUSH1), jumpOffsetBytes[0], jumpOffsetBytes[1], jumpOffsetBytes[2], jumpOffsetBytes[3],
+		byte(vm.PUSH1), 42, // count := 42
+		byte(vm.PUSH4), jumpOffsetBytes[0], jumpOffsetBytes[1], jumpOffsetBytes[2], jumpOffsetBytes[3],
 		byte(vm.JUMP),
 		// </entrypoint>
 	}
+
+	deploymentCode = append(deploymentCode, entryPointCode...)
 	for i := 0; i < numWorkSections; i++ {
-		code = append(code, []byte{
-			byte(vm.JUMPDEST),
-			byte(vm.PC),
-			byte(vm.ADD),
-		}...)
+		// <work section>
+		deploymentCode = append(deploymentCode, workSectionBytecode...)
+		// </work section>
 	}
 
-	return code
+	return deploymentCode, deploymentCode[18:]
 }
 
 func getTestChainConfig() *params.ChainConfig {

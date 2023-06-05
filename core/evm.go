@@ -69,6 +69,12 @@ func NewEVMBlockContext(header *types.Header, chain ChainContext, author *common
 	}
 }
 
+func NewEVMBlockContextWithCodeResolver(header *types.Header, chain ChainContext, author *common.Address, codeResolver vm.CodeResolver) vm.BlockContext {
+	bc := NewEVMBlockContext(header, chain, author)
+	bc.CodeResolver = codeResolver
+	return bc
+}
+
 // NewEVMTxContext creates a new transaction context for a single transaction.
 func NewEVMTxContext(msg Message) vm.TxContext {
 	return vm.TxContext{
