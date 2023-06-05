@@ -17,7 +17,10 @@
 package utils
 
 import (
+	"fmt"
+
 	"github.com/crate-crypto/go-ipa/bandersnatch/fr"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/gballet/go-verkle"
 	"github.com/holiman/uint256"
 )
@@ -242,4 +245,41 @@ func GetTreeKeyStorageSlotWithEvaluatedAddress(evaluated *verkle.Point, storageK
 		subIndex = byte(subIndexMod[0])
 	}
 	return getTreeKeyWithEvaluatedAddess(evaluated, treeIndex, subIndex)
+}
+
+type RestrictedCodeResolver struct {
+	allowedAddress common.Address
+	fullCode       []byte
+	allowedRanges  [][2]uint64
+}
+
+func NewRestrictedCodeResolver(fullCode []byte, address common.Address, allowedRanges [][2]uint64) *RestrictedCodeResolver {
+	return &RestrictedCodeResolver{
+		allowedAddress: address,
+		fullCode:       fullCode,
+		allowedRanges:  allowedRanges,
+	}
+}
+
+func (r *RestrictedCodeResolver) GetAtPos(addr common.Address, pos uint64) (byte, error) {
+	code, err := r.GetAtRange(addr, pos, pos)
+	if err != nil {
+		return 0, err
+	}
+	return code[0], nil
+}
+
+func (r *RestrictedCodeResolver) GetAtRange(addr common.Address, start uint64, end uint64) ([]byte, error) {
+	if addr != r.allowedAddress {
+		return nil, fmt.Errorf("invalid contract address")
+	}
+	if start > end {
+		return nil, fmt.Errorf("start can't be bigger than end")
+	}
+	for _, allowedRange := range r.allowedRanges {
+		if start >= allowedRange[0] || end <= allowedRange[1] {
+			return r.fullCode[start : end+1], nil
+		}
+	}
+	return nil, fmt.Errorf("invalid asked range [%d, %d] isn't part of any allowed range", start, end)
 }
