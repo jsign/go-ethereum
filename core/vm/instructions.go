@@ -375,7 +375,7 @@ func opCodeCopy(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([
 		uint64CodeOffset = 0xffffffffffffffff
 	}
 
-	code, err := scope.Contract.CodeResolver.GetAtRange(scope.Contract.Address(), uint64CodeOffset, uint64CodeOffset+length.Uint64()-1)
+	code, err := scope.Contract.CodeResolver.GetAtRange(uint64CodeOffset, uint64CodeOffset+length.Uint64()-1)
 	if err != nil {
 		return nil, fmt.Errorf("get code for codecopy: %s", err)
 	}
@@ -1014,7 +1014,7 @@ func opPush1(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]by
 // make push instruction function
 func makePush(size uint64, pushByteSize int) executionFunc {
 	return func(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byte, error) {
-		codeLen := scope.Contract.CodeSize
+		codeLen := int(scope.Contract.CodeResolver.GetSize())
 
 		startMin := codeLen
 		if int(*pc+1) < startMin {
@@ -1032,7 +1032,7 @@ func makePush(size uint64, pushByteSize int) executionFunc {
 		}
 
 		integer := new(uint256.Int)
-		valueBytes, err := scope.Contract.CodeResolver.GetAtRange(scope.Contract.Address(), uint64(startMin), uint64(endMin-1))
+		valueBytes, err := scope.Contract.CodeResolver.GetAtRange(uint64(startMin), uint64(endMin-1))
 		if err != nil {
 			return nil, fmt.Errorf("get PUSH values: %s", err)
 		}

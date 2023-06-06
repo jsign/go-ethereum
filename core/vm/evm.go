@@ -77,8 +77,6 @@ type BlockContext struct {
 	Difficulty  *big.Int       // Provides information for DIFFICULTY
 	BaseFee     *big.Int       // Provides information for BASEFEE
 	Random      *common.Hash   // Provides information for PREVRANDAO
-
-	CodeResolver CodeResolver
 }
 
 // TxContext provides the EVM with information about a transaction.
@@ -256,7 +254,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 			// The depth-check is already done, and precompiles handled above
 			contract := NewContract(caller, AccountRef(addrCopy), value, gas)
 			//contract.SetCallCode(&addrCopy, evm.StateDB.GetCodeHash(addrCopy), code)
-			contract.SetCallCodeFunc(&addrCopy, evm.StateDB.GetCodeHash(addrCopy), evm.Context.CodeResolver, evm.StateDB.GetCodeSize(addr))
+			contract.SetCallCodeFunc(&addrCopy, evm.StateDB.GetCodeHash(addrCopy), evm.StateDB.GetContractCode(addrCopy), evm.StateDB.GetCodeSize(addr))
 			contract.IsDeployment = creation
 			ret, err = evm.interpreter.Run(contract, input, false)
 			gas = contract.Gas

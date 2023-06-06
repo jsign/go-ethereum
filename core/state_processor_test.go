@@ -36,7 +36,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/trie/utils"
 
 	//"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
@@ -491,7 +490,7 @@ func TestExecuteChunkedContract(t *testing.T) {
 				// the jumping point won't be allowed to be executed. If we get asked for it, the resolver will error.
 				{entryPointSize + (workSectionBytecodeSize * uint64(jumpToNthChunk)), uint64(len(contractCode))},
 			}
-			resolver := utils.NewRestrictedCodeResolver(contractCode, contractAddr, allowedRanges)
+			resolver := types.NewSingleContractCodeResolver(contractCode, contractAddr, allowedRanges)
 
 			tx, _ := types.SignTx(types.NewTransaction(1, contractAddr, big.NewInt(0), 100_000, big.NewInt(875000000), nil), signer, testKey)
 			gen.SetCodeResolver(resolver)
@@ -513,33 +512,34 @@ func TestExecuteChunkedContract(t *testing.T) {
 // createVerkleTreeJumpyContract creates some bytecode that deploys a
 // contract with teh following shape:
 //
-//	┌─────────────────────┐
-//	│                     │
-//	│     ENTRYPOINT      │        ┼
-//	│  ┌──────────────┐   │
-//	│  │PUSH1 42      │   │
-//	│  │PUSH4 <offset>│   │
-//	│  │JUMP          ├───┼──┐
-//	│  └──────────────┘   │  │
-//	│                     │  │
-//	│  ┌──────────────┐   │  │
-//	│  │              │   │  │
-//	│  │  WORK        │   │  │             WORK
-//	│  │              │   │  │       ┌───────────────────────┐
-//	│  └──────────────┘   │  │       │  JUMPDEST             │
-//	│    ...              │  │       │  PUSH1 1              │
-//	│                ◄────┼──┘       │  ADD                  │
-//	│    ...              │          │                       │
-//	│                     │          └───────────────────────┘
-//	│    ...              │
-//	│                     │
-//	│  ┌──────────────┐   │
-//	│  │              │   │
-//	│  │ WORK         │   │
-//	│  │              │   │
-//	│  └──────────────┘   │
-//	│                     │
-//	└─────────────────────┘
+//		┌─────────────────────┐
+//		│                     │
+//		│     ENTRYPOINT      │        ┼
+//		│  ┌──────────────┐   │
+//		│  │PUSH1 42      │   │
+//		│  │PUSH4 <offset>│   │
+//		│  │JUMP          ├───┼──┐
+//		│  └──────────────┘   │  │
+//		│                     │  │
+//		│  ┌──────────────┐   │  │
+//		│  │              │   │  │
+//		│  │  WORK        │   │  │             WORK
+//		│  │              │   │  │       ┌───────────────────────┐
+//		│  └──────────────┘   │  │       │  JUMPDEST             │
+//		│    ...              │  │       │  PUSH1 1              │
+//		│                ◄────┼──┘       │  ADD                  │
+//		│    ...              │          │                       │
+//		│                     │          └───────────────────────┘
+//		│    ...              │
+//		│                     │
+//		│  ┌──────────────┐   │
+//		│  │              │   │
+//		│  │ WORK         │   │
+//		│  │              │   │
+//		│  └──────────────┘   │
+//		│                     │
+//		└─────────────────────┘
+//	 TL;DR of logic: Start with a counter with 42, and +1 on each WORK section.
 //
 // The idea is we can parametrize how many WORK sections we want, and we can
 // jump to any of them. Effectively, this means that for executing this contract

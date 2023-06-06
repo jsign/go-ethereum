@@ -21,6 +21,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/ethereum/go-ethereum/trie/utils"
 	"github.com/gballet/go-verkle"
@@ -71,13 +72,7 @@ type Contract struct {
 	Gas   uint64
 	value *big.Int
 
-	CodeResolver CodeResolver
-	CodeSize     int
-}
-
-type CodeResolver interface {
-	GetAtPos(addr common.Address, pos uint64) (byte, error)
-	GetAtRange(addr common.Address, start, end uint64) ([]byte, error)
+	CodeResolver types.ContractCode
 }
 
 // NewContract returns a new contract environment for the execution of EVM.
@@ -104,11 +99,11 @@ func (c *Contract) validJumpdest(dest *uint256.Int) (bool, error) {
 	udest, overflow := dest.Uint64WithOverflow()
 	// PC cannot go beyond len(code) and certainly can't be bigger than 63bits.
 	// Don't bother checking for JUMPDEST in that case.
-	if overflow || udest >= uint64(c.CodeSize) {
+	if overflow || udest >= uint64(c.CodeResolver.GetSize()) {
 		return false, nil
 	}
 	// Only JUMPDESTs allowed for destinations
-	jumpedOpCode, err := c.CodeResolver.GetAtPos(*c.CodeAddr, udest)
+	jumpedOpCode, err := c.CodeResolver.GetAtPos(udest)
 	if err != nil {
 		return false, fmt.Errorf("get opcode at JUMP destination: %s", err)
 	}
@@ -166,7 +161,7 @@ func (c *Contract) AsDelegate() *Contract {
 // GetOp returns the n'th element in the contract bytecode.
 func (c *Contract) GetOp(n uint64) (OpCode, error) {
 	if c.CodeResolver != nil {
-		op, err := c.CodeResolver.GetAtPos(*c.CodeAddr, n)
+		op, err := c.CodeResolver.GetAtPos(n)
 		if err != nil {
 			return 0, fmt.Errorf("resolving opcode at %d: %w", n, err)
 		}
@@ -223,11 +218,10 @@ func (c *Contract) SetCallCode(addr *common.Address, hash common.Hash, code []by
 	c.CodeAddr = addr
 }
 
-func (c *Contract) SetCallCodeFunc(addr *common.Address, hash common.Hash, codeResolver CodeResolver, codeSize int) {
+func (c *Contract) SetCallCodeFunc(addr *common.Address, hash common.Hash, codeResolver types.ContractCode, codeSize int) {
 	c.CodeResolver = codeResolver
 	c.CodeHash = hash
 	c.CodeAddr = addr
-	c.CodeSize = codeSize
 }
 
 // SetCodeOptionalHash can be used to provide code, but it's optional to provide hash.
@@ -238,6 +232,5 @@ func (c *Contract) SetCodeOptionalHash(addr *common.Address, codeAndHash *codeAn
 	c.CodeAddr = addr
 
 	allowedCodeRanges := [][2]uint64{{0, uint64(len(codeAndHash.code) - 1)}} // Simply allow accessing all the code.
-	c.CodeResolver = utils.NewRestrictedCodeResolver(codeAndHash.code, *addr, allowedCodeRanges)
-	c.CodeSize = len(codeAndHash.code)
+	c.CodeResolver = types.NewSingleContractCodeResolver(codeAndHash.code, *addr, allowedCodeRanges).Get(*addr)
 }

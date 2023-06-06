@@ -132,6 +132,8 @@ type StateDB struct {
 	StorageUpdated int
 	AccountDeleted int
 	StorageDeleted int
+
+	codeResolver types.ContractCodeResolver
 }
 
 // New creates a new state from a given trie.
@@ -1180,4 +1182,12 @@ func (s *StateDB) AddressInAccessList(addr common.Address) bool {
 // SlotInAccessList returns true if the given (address, slot)-tuple is in the access list.
 func (s *StateDB) SlotInAccessList(addr common.Address, slot common.Hash) (addressPresent bool, slotPresent bool) {
 	return s.accessList.Contains(addr, slot)
+}
+
+func (s *StateDB) SetContractCodeResolver(resolver types.ContractCodeResolver) {
+	s.codeResolver = resolver
+}
+
+func (s *StateDB) GetContractCode(addr common.Address) types.ContractCode {
+	return s.codeResolver.Get(addr)
 }

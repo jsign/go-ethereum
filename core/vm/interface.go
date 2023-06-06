@@ -80,6 +80,8 @@ type StateDB interface {
 
 	Witness() *types.AccessWitness
 	SetWitness(*types.AccessWitness)
+
+	GetContractCode(addr common.Address) types.ContractCode
 }
 
 // CallContext provides a basic interface for the EVM calling conventions. The EVM
