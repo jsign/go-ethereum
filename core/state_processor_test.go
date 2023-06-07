@@ -20,6 +20,7 @@ import (
 	//"bytes"
 	"crypto/ecdsa"
 	"encoding/binary"
+	"fmt"
 
 	//"fmt"
 	"math/big"
@@ -32,10 +33,13 @@ import (
 	"github.com/ethereum/go-ethereum/consensus/ethash"
 	"github.com/ethereum/go-ethereum/consensus/misc"
 	"github.com/ethereum/go-ethereum/core/rawdb"
+	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/gballet/go-verkle"
+	"github.com/stretchr/testify/require"
 
 	//"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
@@ -468,6 +472,8 @@ func TestExecuteChunkedContract(t *testing.T) {
 	numWorkChunks := 10
 	jumpToNthChunk := 3
 	deploymentContractCode, contractCode := createVerkleTreeJumpyContract(numWorkChunks, jumpToNthChunk)
+
+	var statelessTx *types.Transaction
 	blocks, receipts, proofs, statediffs := GenerateVerkleChain(gspec.Config, genesis, ethash.NewFaker(), db, 2, func(i int, gen *BlockGen) {
 		switch i {
 		case 0:
@@ -495,7 +501,7 @@ func TestExecuteChunkedContract(t *testing.T) {
 			tx, _ := types.SignTx(types.NewTransaction(1, contractAddr, big.NewInt(0), 100_000, big.NewInt(875000000), nil), signer, testKey)
 			gen.SetCodeResolver(resolver)
 			gen.AddTx(tx)
-
+			statelessTx = tx
 		}
 	})
 	_ = blocks
@@ -510,6 +516,38 @@ func TestExecuteChunkedContract(t *testing.T) {
 			t.Fatalf("receipt at block %d failed", i)
 		}
 	}
+
+	// Execute the last transaction but in a stateless-context.
+	sender, err := signer.Sender(statelessTx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	db = rawdb.NewMemoryDatabase()
+
+	err = trie.DeserializeAndVerifyVerkleProof(proofs[1], blocks[0].Root().Bytes(), statediffs[1])
+	require.NoError(t, err)
+	proof, err := verkle.DeserializeProof(proofs[1], statediffs[1])
+	if err != nil {
+		t.Fatalf("failed to deserialize proof: %v", err)
+	}
+	rootC := new(verkle.Point)
+	rootC.SetBytesTrusted(blocks[0].Root().Bytes())
+	tree, err := verkle.TreeFromProof(proof, rootC)
+	if err != nil {
+		t.Fatalf("failed to create tree from proof: %v", err)
+	}
+	trieDB := state.NewDatabaseWithConfig(db, &trie.Config{UseVerkle: true})
+	vkt := trie.NewVerkleTrie(tree, trieDB.TrieDB())
+	statedb, err := state.NewWithTrie(blocks[0].Root(), trieDB, nil, vkt)
+	if err != nil {
+		panic(err)
+	}
+	var usedGas uint64
+	receipt, err := ApplyTransaction(config, nil, &sender, nil, statedb, blocks[1].Header(), statelessTx, &usedGas, vm.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("RECEIPT: %v\n", receipt)
 }
 
 // createVerkleTreeJumpyContract creates some bytecode that deploys a

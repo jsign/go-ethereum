@@ -136,11 +136,18 @@ type StateDB struct {
 	codeResolver types.ContractCodeResolver
 }
 
-// New creates a new state from a given trie.
 func New(root common.Hash, db Database, snaps *snapshot.Tree) (*StateDB, error) {
-	tr, err := db.OpenTrie(root)
-	if err != nil {
-		return nil, err
+	return NewWithTrie(root, db, snaps, nil)
+}
+
+// New creates a new state from a given trie.
+func NewWithTrie(root common.Hash, db Database, snaps *snapshot.Tree, tr Trie) (*StateDB, error) {
+	var err error
+	if tr == nil {
+		tr, err = db.OpenTrie(root)
+		if err != nil {
+			return nil, err
+		}
 	}
 	sdb := &StateDB{
 		db:                  db,
