@@ -538,12 +538,13 @@ func TestExecuteChunkedContract(t *testing.T) {
 	}
 	trieDB := state.NewDatabaseWithConfig(db, &trie.Config{UseVerkle: true})
 	vkt := trie.NewVerkleTrie(tree, trieDB.TrieDB())
-	statedb, err := state.NewWithTrie(blocks[0].Root(), trieDB, nil, vkt)
+	statedb, err := state.NewWithTrie(blocks[0].Root(), trieDB, nil, vkt, false)
 	if err != nil {
 		panic(err)
 	}
 	var usedGas uint64
-	receipt, err := ApplyTransaction(config, nil, &sender, nil, statedb, blocks[1].Header(), statelessTx, &usedGas, vm.Config{})
+	gasPool := new(GasPool).AddGas(blocks[1].Header().GasLimit)
+	receipt, err := ApplyTransaction(config, nil, &sender, gasPool, statedb, blocks[1].Header(), statelessTx, &usedGas, vm.Config{})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -137,11 +137,11 @@ type StateDB struct {
 }
 
 func New(root common.Hash, db Database, snaps *snapshot.Tree) (*StateDB, error) {
-	return NewWithTrie(root, db, snaps, nil)
+	return NewWithTrie(root, db, snaps, nil, true)
 }
 
 // New creates a new state from a given trie.
-func NewWithTrie(root common.Hash, db Database, snaps *snapshot.Tree, tr Trie) (*StateDB, error) {
+func NewWithTrie(root common.Hash, db Database, snaps *snapshot.Tree, tr Trie, usesnap bool) (*StateDB, error) {
 	var err error
 	if tr == nil {
 		tr, err = db.OpenTrie(root)
@@ -165,7 +165,7 @@ func NewWithTrie(root common.Hash, db Database, snaps *snapshot.Tree, tr Trie) (
 	}
 	if tr.IsVerkle() {
 		sdb.witness = types.NewAccessWitness()
-		if sdb.snaps == nil {
+		if sdb.snaps == nil && usesnap {
 			snapconfig := snapshot.Config{
 				CacheSize:  256,
 				Recovery:   false,
