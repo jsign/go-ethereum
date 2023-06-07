@@ -177,19 +177,22 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 
 	// Evaluate one address per group of 256, 31-byte chunks
 	if in.evm.ChainConfig().IsCancun(in.evm.Context.BlockNumber) && !contract.IsDeployment {
-		// TODO(stateless): this is a temporary "if" that we should fix.
-		if len(contract.Code) > 0 {
-			contract.Chunks = trie.ChunkifyCode(contract.Code)
+		// TODO(jsign): this is asking always for all the code... not friendly for stateless. We should
+		// think about a way to change it.
+		code, err := contract.CodeResolver.GetAll()
+		if err != nil {
+			return nil, fmt.Errorf("get full contract code: %s", err)
+		}
+		contract.Chunks = trie.ChunkifyCode(code)
 
-			totalEvals := len(contract.Code) / 31 / 256
-			if len(contract.Code)%(256*31) != 0 {
-				totalEvals += 1
-			}
+		totalEvals := len(code) / 31 / 256
+		if len(code)%(256*31) != 0 {
+			totalEvals += 1
+		}
 
-			chunkEvals = make([][]byte, totalEvals)
-			for i := 0; i < totalEvals; i++ {
-				chunkEvals[i] = utils.GetTreeKeyCodeChunkWithEvaluatedAddress(contract.AddressPoint(), uint256.NewInt(uint64(i)*256))
-			}
+		chunkEvals = make([][]byte, totalEvals)
+		for i := 0; i < totalEvals; i++ {
+			chunkEvals[i] = utils.GetTreeKeyCodeChunkWithEvaluatedAddress(contract.AddressPoint(), uint256.NewInt(uint64(i)*256))
 		}
 	}
 

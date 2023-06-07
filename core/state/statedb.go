@@ -1184,6 +1184,8 @@ func (s *StateDB) SlotInAccessList(addr common.Address, slot common.Hash) (addre
 	return s.accessList.Contains(addr, slot)
 }
 
+// TODO(jsign): It _feels_ this method can be avoided, and add `resolver` as a parameter to
+// the `Prepare(...)` method.
 func (s *StateDB) SetContractCodeResolver(resolver types.ContractCodeResolver) {
 	s.codeResolver = resolver
 }

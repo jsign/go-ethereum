@@ -468,7 +468,7 @@ func TestExecuteChunkedContract(t *testing.T) {
 	numWorkChunks := 10
 	jumpToNthChunk := 3
 	deploymentContractCode, contractCode := createVerkleTreeJumpyContract(numWorkChunks, jumpToNthChunk)
-	_, receipts, _, _ := GenerateVerkleChain(gspec.Config, genesis, ethash.NewFaker(), db, 2, func(i int, gen *BlockGen) {
+	blocks, receipts, proofs, statediffs := GenerateVerkleChain(gspec.Config, genesis, ethash.NewFaker(), db, 2, func(i int, gen *BlockGen) {
 		switch i {
 		case 0:
 			tx, _ := types.SignTx(types.NewContractCreation(0, big.NewInt(0), 1_000_000, big.NewInt(875000000), deploymentContractCode), signer, testKey)
@@ -498,6 +498,9 @@ func TestExecuteChunkedContract(t *testing.T) {
 
 		}
 	})
+	_ = blocks
+	_ = proofs
+	_ = statediffs
 
 	for i, receipt := range receipts {
 		if len(receipt) != 1 {

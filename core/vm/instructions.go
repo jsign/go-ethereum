@@ -375,7 +375,7 @@ func opCodeCopy(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([
 		uint64CodeOffset = 0xffffffffffffffff
 	}
 
-	code, err := scope.Contract.CodeResolver.GetAtRange(uint64CodeOffset, uint64CodeOffset+length.Uint64()-1)
+	code, err := scope.Contract.CodeResolver.GetAll()
 	if err != nil {
 		return nil, fmt.Errorf("get code for codecopy: %s", err)
 	}
@@ -992,12 +992,16 @@ func makeLog(size int) executionFunc {
 // opPush1 is a specialized version of pushN
 func opPush1(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byte, error) {
 	var (
-		codeLen = uint64(len(scope.Contract.Code))
+		codeLen = scope.Contract.CodeResolver.GetSize()
 		integer = new(uint256.Int)
 	)
 	*pc += 1
 	if *pc < codeLen {
-		scope.Stack.push(integer.SetUint64(uint64(scope.Contract.Code[*pc])))
+		value, err := scope.Contract.CodeResolver.GetAtPos(*pc)
+		if err != nil {
+			return nil, fmt.Errorf("get opcode: %s", err)
+		}
+		scope.Stack.push(integer.SetUint64(uint64(value)))
 
 		if interpreter.evm.chainConfig.IsCancun(interpreter.evm.Context.BlockNumber) && *pc%31 == 0 {
 			// touch next chunk if PUSH1 is at the boundary. if so, *pc has
