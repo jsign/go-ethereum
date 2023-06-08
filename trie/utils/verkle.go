@@ -137,7 +137,7 @@ func GetTreeKeyCodeChunkWithEvaluatedAddress(addressPoint *verkle.Point, chunk *
 	if len(subIndexMod) != 0 {
 		subIndex = byte(subIndexMod[0])
 	}
-	return getTreeKeyWithEvaluatedAddess(addressPoint, treeIndex, subIndex)
+	return GetTreeKeyWithEvaluatedAddess(addressPoint, treeIndex, subIndex)
 }
 
 func GetTreeKeyStorageSlot(address []byte, storageKey *uint256.Int) []byte {
@@ -176,7 +176,7 @@ func PointToHash(evaluated *verkle.Point, suffix byte) []byte {
 	return retb[:]
 }
 
-func getTreeKeyWithEvaluatedAddess(evaluated *verkle.Point, treeIndex *uint256.Int, subIndex byte) []byte {
+func GetTreeKeyWithEvaluatedAddess(evaluated *verkle.Point, treeIndex *uint256.Int, subIndex byte) []byte {
 	var poly [5]fr.Element
 
 	poly[0].SetZero()
@@ -241,5 +241,5 @@ func GetTreeKeyStorageSlotWithEvaluatedAddress(evaluated *verkle.Point, storageK
 		// significant byte.
 		subIndex = byte(subIndexMod[0])
 	}
-	return getTreeKeyWithEvaluatedAddess(evaluated, treeIndex, subIndex)
+	return GetTreeKeyWithEvaluatedAddess(evaluated, treeIndex, subIndex)
 }

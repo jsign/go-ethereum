@@ -183,16 +183,20 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		if err != nil {
 			return nil, fmt.Errorf("get full contract code: %s", err)
 		}
-		contract.Chunks = trie.ChunkifyCode(code)
+		// TODO(jsign): hack around.
+		if code != nil {
 
-		totalEvals := len(code) / 31 / 256
-		if len(code)%(256*31) != 0 {
-			totalEvals += 1
-		}
+			contract.Chunks = trie.ChunkifyCode(code)
 
-		chunkEvals = make([][]byte, totalEvals)
-		for i := 0; i < totalEvals; i++ {
-			chunkEvals[i] = utils.GetTreeKeyCodeChunkWithEvaluatedAddress(contract.AddressPoint(), uint256.NewInt(uint64(i)*256))
+			totalEvals := len(code) / 31 / 256
+			if len(code)%(256*31) != 0 {
+				totalEvals += 1
+			}
+
+			chunkEvals = make([][]byte, totalEvals)
+			for i := 0; i < totalEvals; i++ {
+				chunkEvals[i] = utils.GetTreeKeyCodeChunkWithEvaluatedAddress(contract.AddressPoint(), uint256.NewInt(uint64(i)*256))
+			}
 		}
 	}
 

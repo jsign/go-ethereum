@@ -242,11 +242,11 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 	if isPrecompile {
 		ret, gas, err = RunPrecompiledContract(p, input, gas)
 	} else {
-		// Initialise a new contract and set the code that is to be used by the EVM.
+		// Initialise a new contract and set the contractCode that is to be used by the EVM.
 		// The contract is a scoped environment for this execution context only.
-		code := evm.StateDB.GetCode(addr)
+		contractCode := evm.StateDB.GetContractCode(addr)
 
-		if len(code) == 0 {
+		if contractCode.GetSize() == 0 {
 			ret, err = nil, nil // gas is unchanged
 		} else {
 			addrCopy := addr
@@ -254,7 +254,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 			// The depth-check is already done, and precompiles handled above
 			contract := NewContract(caller, AccountRef(addrCopy), value, gas)
 			//contract.SetCallCode(&addrCopy, evm.StateDB.GetCodeHash(addrCopy), code)
-			contract.SetCallCodeFunc(&addrCopy, evm.StateDB.GetCodeHash(addrCopy), evm.StateDB.GetContractCode(addrCopy), evm.StateDB.GetCodeSize(addr))
+			contract.SetCallCodeFunc(&addrCopy, evm.StateDB.GetCodeHash(addrCopy), contractCode, int(contractCode.GetSize()))
 			contract.IsDeployment = creation
 			ret, err = evm.interpreter.Run(contract, input, false)
 			gas = contract.Gas

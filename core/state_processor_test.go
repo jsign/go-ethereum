@@ -540,8 +540,9 @@ func TestExecuteChunkedContract(t *testing.T) {
 	vkt := trie.NewVerkleTrie(tree, trieDB.TrieDB())
 	statedb, err := state.NewWithTrie(blocks[0].Root(), trieDB, nil, vkt, false)
 	if err != nil {
-		panic(err)
+		t.Fatalf("failed to create statedb: %v", err)
 	}
+	statedb.SetContractCodeResolver(types.NewTreeContractResolver(tree))
 	var usedGas uint64
 	gasPool := new(GasPool).AddGas(blocks[1].Header().GasLimit)
 	receipt, err := ApplyTransaction(config, nil, &sender, gasPool, statedb, blocks[1].Header(), statelessTx, &usedGas, vm.Config{})
