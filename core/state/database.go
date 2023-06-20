@@ -415,16 +415,13 @@ func (db *VerkleDB) GetTreeKeyHeader(addr []byte) *verkle.Point {
 }
 
 // OpenTrie opens the main account trie.
-func (db *VerkleDB) OpenTrie(root common.Hash) (Trie, error) {
-	if root == (common.Hash{}) || root == emptyRoot {
+func (db *VerkleDB) OpenTrie(_ common.Hash) (Trie, error) {
+	payload, err := db.DiskDB().Get([]byte("flat-"))
+	if err != nil {
 		return trie.NewVerkleTrie(verkle.New(), db.db, db.addrToPoint), nil
 	}
-	payload, err := db.DiskDB().Get(root[:])
-	if err != nil {
-		return nil, err
-	}
 
-	r, err := verkle.ParseNode(payload, 0, root[:])
+	r, err := verkle.ParseNode(payload, 0)
 	if err != nil {
 		panic(err)
 	}

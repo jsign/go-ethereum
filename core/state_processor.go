@@ -188,6 +188,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 					count++ // count increase for the account itself
 
 					mkv.addAccount(addr, acc)
+					tt.Overlay().SetStorageRootConversion(addr, common.BytesToHash(acc.Root))
 
 					// Store the account code if present
 					if !bytes.Equal(acc.CodeHash, emptyCodeHash[:]) {
