@@ -132,11 +132,26 @@ func NewDatabase(db ethdb.Database) Database {
 	return NewDatabaseWithConfig(db, nil)
 }
 
+var (
+	dbKeyOverlayTransitionStarted = []byte("overlay-transition-started")
+	dbKeyOverlayTransitionEnded   = []byte("overlay-transition-ended")
+)
+
 // NewDatabaseWithConfig creates a backing store for state. The returned database
 // is safe for concurrent use and retains a lot of collapsed RLP trie nodes in a
 // large memory cache.
 func NewDatabaseWithConfig(db ethdb.Database, config *trie.Config) Database {
 	csc, _ := lru.New(codeSizeCacheSize)
+
+	transitionStarted, err := db.Has(dbKeyOverlayTransitionStarted)
+	if err != nil {
+		panic(err)
+	}
+	transitionEnded, err := db.Has(dbKeyOverlayTransitionEnded)
+	if err != nil {
+		panic(err)
+	}
+
 	return &ForkingDB{
 		cachingDB: &cachingDB{
 			db:            trie.NewDatabaseWithConfig(db, config),
@@ -151,8 +166,8 @@ func NewDatabaseWithConfig(db ethdb.Database, config *trie.Config) Database {
 			codeCache:     fastcache.New(codeCacheSize),
 			addrToPoint:   utils.NewPointCache(),
 		},
-		started: (config != nil && config.UseVerkle),
-		ended:   (config != nil && config.UseVerkle),
+		started: transitionStarted,
+		ended:   transitionEnded,
 	}
 }
 
@@ -281,7 +296,7 @@ func (fdg *ForkingDB) Transitionned() bool {
 }
 
 // Fork implements the fork
-func (fdb *ForkingDB) StartTransition(originalRoot, translatedRoot common.Hash) {
+func (fdb *ForkingDB) StartTransition(originalRoot, translatedRoot common.Hash) error {
 	fmt.Println(`
 	__________.__                       .__                .__                   __       .__                               .__          ____         
 	\__    ___|  |__   ____        ____ |  |   ____ ______ |  |__ _____    _____/  |_     |  |__ _____    ______    __  _  _|__| ____   / ___\ ______
@@ -290,13 +305,18 @@ func (fdb *ForkingDB) StartTransition(originalRoot, translatedRoot common.Hash) 
 	  |____|  |___|  /\___        \___  |____/\___  |   __/|___|  (____  |___|  |__|      |___|  (____  /_____/       \/\_/ |__|___|  /_____//_____/
                                                     |__|`)
 	fdb.started = true
+	if err := fdb.VerkleDB.diskdb.Put(dbKeyOverlayTransitionStarted, []byte{1}); err != nil {
+		return fmt.Errorf("failed to start transition: %s", err)
+	}
 	fdb.translatedRoots = map[common.Hash]common.Hash{originalRoot: translatedRoot}
 	fdb.baseRoot = originalRoot
 	// initialize so that the first storage-less accounts are processed
 	fdb.StorageProcessed = true
+
+	return nil
 }
 
-func (fdb *ForkingDB) EndTransition() {
+func (fdb *ForkingDB) EndTransition() error {
 	fmt.Println(`
 	__________.__                       .__                .__                   __       .__                       .__                    .___         .___
 	\__    ___|  |__   ____        ____ |  |   ____ ______ |  |__ _____    _____/  |_     |  |__ _____    ______    |  | _____    ____   __| _/____   __| _/
@@ -304,7 +324,12 @@ func (fdb *ForkingDB) EndTransition() {
 	  |    |  |   Y  \  ___/     \  ___/|  |_\  ___/|  |_> |   Y  \/ __ \|   |  |  |      |   Y  \/ __ \_\___ \     |  |__/ __ \|   |  / /_/ \  ___// /_/ |
 	  |____|  |___|  /\___        \___  |____/\___  |   __/|___|  (____  |___|  |__|      |___|  (____  /_____/     |____(____  |___|  \____ |\___  \____ |
                                                     |__|`)
+	if err := fdb.VerkleDB.diskdb.Put(dbKeyOverlayTransitionEnded, []byte{1}); err != nil {
+		return fmt.Errorf("failed to mark transition as ended: %s", err)
+	}
 	fdb.ended = true
+
+	return nil
 }
 
 func (fdb *ForkingDB) AddTranslation(orig, trans common.Hash) {
