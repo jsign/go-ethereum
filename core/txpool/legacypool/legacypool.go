@@ -26,17 +26,17 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/prque"
-	"github.com/ethereum/go-ethereum/consensus/misc/eip1559"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/txpool"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/metrics"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"common/prque"
+	"github.com/jsign/go-ethereum"consensus/misc/eip1559"
+	"github.com/jsign/go-ethereum"core"
+	"github.com/jsign/go-ethereum"core/state"
+	"github.com/jsign/go-ethereum"core/txpool"
+	"github.com/jsign/go-ethereum"core/types"
+	"github.com/jsign/go-ethereum"event"
+	"github.com/jsign/go-ethereum"log"
+	"github.com/jsign/go-ethereum"metrics"
+	"github.com/jsign/go-ethereum"params"
 )
 
 const (

@@ -24,14 +24,14 @@ import (
 	"time"
 
 	"github.com/VictoriaMetrics/fastcache"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/metrics"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie/trienode"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"core/rawdb"
+	"github.com/jsign/go-ethereum"core/types"
+	"github.com/jsign/go-ethereum"ethdb"
+	"github.com/jsign/go-ethereum"log"
+	"github.com/jsign/go-ethereum"metrics"
+	"github.com/jsign/go-ethereum"rlp"
+	"github.com/jsign/go-ethereum"trie/trienode"
 )
 
 var (

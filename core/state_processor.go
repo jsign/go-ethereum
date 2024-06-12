@@ -22,15 +22,15 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus"
-	"github.com/ethereum/go-ethereum/consensus/misc"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"consensus"
+	"github.com/jsign/go-ethereum"consensus/misc"
+	"github.com/jsign/go-ethereum"core/state"
+	"github.com/jsign/go-ethereum"core/types"
+	"github.com/jsign/go-ethereum"core/vm"
+	"github.com/jsign/go-ethereum"crypto"
+	"github.com/jsign/go-ethereum"log"
+	"github.com/jsign/go-ethereum"params"
 )
 
 // StateProcessor is a basic Processor, which takes care of transitioning

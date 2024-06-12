@@ -19,11 +19,11 @@ package vm
 import (
 	"encoding/binary"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"core/state"
+	"github.com/jsign/go-ethereum"core/types"
+	"github.com/jsign/go-ethereum"crypto"
+	"github.com/jsign/go-ethereum"params"
 	"github.com/holiman/uint256"
 )
 

@@ -24,17 +24,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/beacon/engine"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/eth"
-	"github.com/ethereum/go-ethereum/eth/downloader"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/miner"
-	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/jsign/go-ethereum"beacon/engine"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"common/hexutil"
+	"github.com/jsign/go-ethereum"core/rawdb"
+	"github.com/jsign/go-ethereum"core/types"
+	"github.com/jsign/go-ethereum"eth"
+	"github.com/jsign/go-ethereum"eth/downloader"
+	"github.com/jsign/go-ethereum"log"
+	"github.com/jsign/go-ethereum"miner"
+	"github.com/jsign/go-ethereum"node"
+	"github.com/jsign/go-ethereum"rpc"
 )
 
 // Register adds the engine API to the full node.

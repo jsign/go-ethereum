@@ -17,8 +17,8 @@
 package rawdb
 
 import (
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"ethdb"
 )
 
 func ReadVerkleTransitionState(db ethdb.KeyValueReader, hash common.Hash) ([]byte, error) {

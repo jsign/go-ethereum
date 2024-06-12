@@ -24,18 +24,18 @@ import (
 	"sort"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/state/snapshot"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/metrics"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie"
-	"github.com/ethereum/go-ethereum/trie/trienode"
-	"github.com/ethereum/go-ethereum/trie/triestate"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"core/rawdb"
+	"github.com/jsign/go-ethereum"core/state/snapshot"
+	"github.com/jsign/go-ethereum"core/types"
+	"github.com/jsign/go-ethereum"crypto"
+	"github.com/jsign/go-ethereum"log"
+	"github.com/jsign/go-ethereum"metrics"
+	"github.com/jsign/go-ethereum"params"
+	"github.com/jsign/go-ethereum"rlp"
+	"github.com/jsign/go-ethereum"trie"
+	"github.com/jsign/go-ethereum"trie/trienode"
+	"github.com/jsign/go-ethereum"trie/triestate"
 )
 
 type revision struct {
@@ -827,7 +827,7 @@ func (s *StateDB) Copy() *StateDB {
 	}
 	// Copy the dirty states, logs, and preimages
 	for addr := range s.journal.dirties {
-		// As documented [here](https://github.com/ethereum/go-ethereum/pull/16485#issuecomment-380438527),
+		// As documented [here](https://github.com/jsign/go-ethereum"pull/16485#issuecomment-380438527),
 		// and in the Finalise-method, there is a case where an object is in the journal but not
 		// in the stateObjects: OOG after touch on ripeMD prior to Byzantium. Thus, we need to check for
 		// nil

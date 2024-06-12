@@ -24,11 +24,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/event"
+	"github.com/jsign/go-ethereum"accounts/abi"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"core/types"
+	"github.com/jsign/go-ethereum"crypto"
+	"github.com/jsign/go-ethereum"event"
 	"github.com/jsign/go-ethereum"
 )
 

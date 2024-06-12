@@ -23,13 +23,13 @@ import (
 	"io"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/accounts/external"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/jsign/go-ethereum"accounts"
+	"github.com/jsign/go-ethereum"accounts/external"
+	"github.com/jsign/go-ethereum"accounts/keystore"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"core/types"
+	"github.com/jsign/go-ethereum"crypto"
+	"github.com/jsign/go-ethereum"log"
 )
 
 // ErrNoChainID is returned whenever the user failed to specify a chain id.

@@ -21,14 +21,14 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/txpool"
-	"github.com/ethereum/go-ethereum/metrics"
-	"github.com/ethereum/go-ethereum/p2p"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/enr"
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"core"
+	"github.com/jsign/go-ethereum"core/txpool"
+	"github.com/jsign/go-ethereum"metrics"
+	"github.com/jsign/go-ethereum"p2p"
+	"github.com/jsign/go-ethereum"p2p/enode"
+	"github.com/jsign/go-ethereum"p2p/enr"
+	"github.com/jsign/go-ethereum"params"
 )
 
 const (

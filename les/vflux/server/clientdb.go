@@ -21,14 +21,14 @@ import (
 	"encoding/binary"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/lru"
-	"github.com/ethereum/go-ethereum/common/mclock"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/les/utils"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"common/lru"
+	"github.com/jsign/go-ethereum"common/mclock"
+	"github.com/jsign/go-ethereum"ethdb"
+	"github.com/jsign/go-ethereum"les/utils"
+	"github.com/jsign/go-ethereum"log"
+	"github.com/jsign/go-ethereum"p2p/enode"
+	"github.com/jsign/go-ethereum"rlp"
 )
 
 const (

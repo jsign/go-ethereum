@@ -17,7 +17,7 @@
 package trie
 
 import (
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/jsign/go-ethereum"common"
 
 	"github.com/ethereum/go-verkle"
 )

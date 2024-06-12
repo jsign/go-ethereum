@@ -24,13 +24,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/eth/tracers"
-	"github.com/ethereum/go-ethereum/tests"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"core"
+	"github.com/jsign/go-ethereum"core/rawdb"
+	"github.com/jsign/go-ethereum"core/types"
+	"github.com/jsign/go-ethereum"core/vm"
+	"github.com/jsign/go-ethereum"eth/tracers"
+	"github.com/jsign/go-ethereum"tests"
 )
 
 // prestateTrace is the result of a prestateTrace run.

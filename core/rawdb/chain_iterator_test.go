@@ -22,8 +22,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"core/types"
 	"golang.org/x/exp/slices"
 )
 

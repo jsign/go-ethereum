@@ -21,8 +21,8 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/trie/utils"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"trie/utils"
 	"github.com/ethereum/go-verkle"
 )
 

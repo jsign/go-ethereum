@@ -25,13 +25,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/ethereum/go-ethereum/cmd/utils"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p/discover"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/nat"
-	"github.com/ethereum/go-ethereum/p2p/netutil"
+	"github.com/jsign/go-ethereum"cmd/utils"
+	"github.com/jsign/go-ethereum"crypto"
+	"github.com/jsign/go-ethereum"log"
+	"github.com/jsign/go-ethereum"p2p/discover"
+	"github.com/jsign/go-ethereum"p2p/enode"
+	"github.com/jsign/go-ethereum"p2p/nat"
+	"github.com/jsign/go-ethereum"p2p/netutil"
 )
 
 func main() {

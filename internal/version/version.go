@@ -23,7 +23,7 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/params"
+	"github.com/jsign/go-ethereum"params"
 )
 
 const ourPath = "github.com/jsign/go-ethereum" // Path to our module

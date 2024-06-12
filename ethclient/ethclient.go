@@ -24,10 +24,10 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"common/hexutil"
+	"github.com/jsign/go-ethereum"core/types"
+	"github.com/jsign/go-ethereum"rpc"
 	"github.com/jsign/go-ethereum"
 )
 

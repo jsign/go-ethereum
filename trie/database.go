@@ -21,11 +21,11 @@ import (
 	"sync"
 
 	"github.com/VictoriaMetrics/fastcache"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethdb"
-	"github.com/ethereum/go-ethereum/trie/triedb/hashdb"
-	"github.com/ethereum/go-ethereum/trie/trienode"
-	"github.com/ethereum/go-ethereum/trie/triestate"
+	"github.com/jsign/go-ethereum"common"
+	"github.com/jsign/go-ethereum"ethdb"
+	"github.com/jsign/go-ethereum"trie/triedb/hashdb"
+	"github.com/jsign/go-ethereum"trie/trienode"
+	"github.com/jsign/go-ethereum"trie/triestate"
 )
 
 // Config defines all necessary options for database.

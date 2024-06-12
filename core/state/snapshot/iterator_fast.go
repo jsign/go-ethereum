@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/jsign/go-ethereum"common"
 	"golang.org/x/exp/slices"
 )
 
