@@ -36,6 +36,7 @@ type pcTracer struct {
 type output struct {
 	ContractsPCs map[common.Address][]uint64
 	ReceiptGas   uint64
+	To           common.Address
 }
 
 func newPCTracer(_ json.RawMessage) (*tracing.Hooks, error) {
@@ -65,12 +66,17 @@ func (t *pcTracer) OnOpcode(pc uint64, op byte, gas, cost uint64, scope tracing.
 }
 
 func (t *pcTracer) OnTxStart(vm *tracing.VMContext, tx *types.Transaction, from common.Address) {
-	t.currentTx = tx.Hash()
 	t.skip = tx.To() == nil
+	if t.skip {
+		return
+	}
+
+	t.currentTx = tx.Hash()
 	t.vm = vm
 	clear(t.pendingBytecodes)
 
 	t.output.ReceiptGas = 0
+	t.output.To = *tx.To()
 	clear(t.output.ContractsPCs)
 }
 
