@@ -156,6 +156,15 @@ func (t *VerkleTrie) UpdateAccount(addr common.Address, acc *types.StateAccount,
 	return nil
 }
 
+func (trie *VerkleTrie) UpdateStem(key []byte, values [][]byte) error {
+	switch root := trie.root.(type) {
+	case *verkle.InternalNode:
+		return root.InsertValuesAtStem(key, values, trie.FlatdbNodeResolver)
+	default:
+		panic("invalid root type")
+	}
+}
+
 // UpdateStorage implements state.Trie, writing the provided storage slot into
 // the tree. If the tree is corrupted, an error will be returned.
 func (t *VerkleTrie) UpdateStorage(address common.Address, key, value []byte) error {

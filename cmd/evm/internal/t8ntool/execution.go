@@ -23,6 +23,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/consensus/ethash"
 	"github.com/ethereum/go-ethereum/consensus/misc"
@@ -41,13 +42,15 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/ethereum/go-ethereum/triedb"
+	"github.com/ethereum/go-verkle"
 	"github.com/holiman/uint256"
 	"golang.org/x/crypto/sha3"
 )
 
 type Prestate struct {
-	Env stEnv              `json:"env"`
-	Pre types.GenesisAlloc `json:"pre"`
+	Env stEnv                         `json:"env"`
+	Pre types.GenesisAlloc            `json:"pre"`
+	VKT map[common.Hash]hexutil.Bytes `json:"vkt,omitempty"`
 }
 
 // ExecutionResult contains the execution status after running a state test, any
@@ -66,6 +69,10 @@ type ExecutionResult struct {
 	WithdrawalsRoot      *common.Hash          `json:"withdrawalsRoot,omitempty"`
 	CurrentExcessBlobGas *math.HexOrDecimal64  `json:"currentExcessBlobGas,omitempty"`
 	CurrentBlobGasUsed   *math.HexOrDecimal64  `json:"blobGasUsed,omitempty"`
+
+	// Verkle witness
+	VerkleProof *verkle.VerkleProof `json:"verkleProof,omitempty"`
+	StateDiff   verkle.StateDiff    `json:"stateDiff,omitempty"`
 }
 
 type ommer struct {
@@ -138,8 +145,11 @@ func (pre *Prestate) Apply(vmConfig vm.Config, chainConfig *params.ChainConfig,
 		}
 		return h
 	}
+	statedb, err := MakePreState(rawdb.NewMemoryDatabase(), pre, chainConfig.IsVerkle(big.NewInt(int64(pre.Env.Number)), pre.Env.Timestamp))
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("could not create statedb: %v", err)
+	}
 	var (
-		statedb     = MakePreState(rawdb.NewMemoryDatabase(), pre.Pre)
 		signer      = types.MakeSigner(chainConfig, new(big.Int).SetUint64(pre.Env.Number), pre.Env.Timestamp)
 		gaspool     = new(core.GasPool)
 		blockHash   = common.Hash{0x13, 0x37}
@@ -149,6 +159,7 @@ func (pre *Prestate) Apply(vmConfig vm.Config, chainConfig *params.ChainConfig,
 		blobGasUsed = uint64(0)
 		receipts    = make(types.Receipts, 0)
 		txIndex     = 0
+		vtrpre      *trie.VerkleTrie
 	)
 	gaspool.AddGas(pre.Env.GasLimit)
 	vmContext := vm.BlockContext{
@@ -161,6 +172,12 @@ func (pre *Prestate) Apply(vmConfig vm.Config, chainConfig *params.ChainConfig,
 		GasLimit:    pre.Env.GasLimit,
 		GetHash:     getHash,
 	}
+
+	switch tr := statedb.GetTrie().(type) {
+	case *trie.VerkleTrie:
+		vtrpre = tr.Copy()
+	}
+
 	// If currentBaseFee is defined, add it to the vmContext.
 	if pre.Env.BaseFee != nil {
 		vmContext.BaseFee = new(big.Int).Set(pre.Env.BaseFee)
@@ -357,6 +374,27 @@ func (pre *Prestate) Apply(vmConfig vm.Config, chainConfig *params.ChainConfig,
 	if err != nil {
 		return nil, nil, nil, NewError(ErrorEVM, fmt.Errorf("could not commit state: %v", err))
 	}
+
+	// Add the witness to the execution result
+	var vktProof *verkle.VerkleProof
+	var vktStateDiff verkle.StateDiff
+	if chainConfig.IsVerkle(big.NewInt(int64(pre.Env.Number)), pre.Env.Timestamp) {
+		keys := statedb.AccessEvents().Keys()
+		if len(keys) > 0 && vtrpre != nil {
+			var proofTrie *trie.VerkleTrie
+			switch tr := statedb.GetTrie().(type) {
+			case *trie.VerkleTrie:
+				proofTrie = tr
+			default:
+				return nil, nil, nil, fmt.Errorf("invalid tree type in proof generation: %v", tr)
+			}
+			vktProof, vktStateDiff, err = vtrpre.Proof(proofTrie, keys, vtrpre.FlatdbNodeResolver)
+			if err != nil {
+				return nil, nil, nil, fmt.Errorf("error generating verkle proof for block %d: %w", pre.Env.Number, err)
+			}
+		}
+	}
+
 	execRs := &ExecutionResult{
 		StateRoot:   root,
 		TxRoot:      types.DeriveSha(includedTxs, trie.NewStackTrie(nil)),
@@ -368,6 +406,8 @@ func (pre *Prestate) Apply(vmConfig vm.Config, chainConfig *params.ChainConfig,
 		Difficulty:  (*math.HexOrDecimal256)(vmContext.Difficulty),
 		GasUsed:     (math.HexOrDecimal64)(gasUsed),
 		BaseFee:     (*math.HexOrDecimal256)(vmContext.BaseFee),
+		VerkleProof: vktProof,
+		StateDiff:   vktStateDiff,
 	}
 	if pre.Env.Withdrawals != nil {
 		h := types.DeriveSha(types.Withdrawals(pre.Env.Withdrawals), trie.NewStackTrie(nil))
@@ -387,10 +427,32 @@ func (pre *Prestate) Apply(vmConfig vm.Config, chainConfig *params.ChainConfig,
 	return statedb, execRs, body, nil
 }
 
-func MakePreState(db ethdb.Database, accounts types.GenesisAlloc) *state.StateDB {
+func MakePreState(db ethdb.Database, pre *Prestate, isVerkle bool) (*state.StateDB, error) {
 	sdb := state.NewDatabaseWithConfig(db, &triedb.Config{Preimages: true})
 	statedb, _ := state.New(types.EmptyRootHash, sdb, nil)
-	for addr, a := range accounts {
+
+	if isVerkle {
+		vtr := statedb.GetTrie().(*trie.VerkleTrie)
+
+		for k, v := range pre.VKT {
+			values := make([][]byte, 256)
+			values[k[31]] = make([]byte, 32)
+			copy(values[k[31]], v)
+			if err := vtr.UpdateStem(k.Bytes(), values); err != nil {
+				return nil, fmt.Errorf("failed to update stem: %s", err)
+			}
+		}
+
+		codeWriter := statedb.Database().DiskDB()
+		for _, acc := range pre.Pre {
+			codeHash := crypto.Keccak256Hash(acc.Code)
+			rawdb.WriteCode(codeWriter, codeHash, acc.Code)
+		}
+
+		return statedb, nil
+	}
+
+	for addr, a := range pre.Pre {
 		statedb.SetCode(addr, a.Code)
 		statedb.SetNonce(addr, a.Nonce)
 		statedb.SetBalance(addr, uint256.MustFromBig(a.Balance), tracing.BalanceIncreaseGenesisBalance)
@@ -399,9 +461,15 @@ func MakePreState(db ethdb.Database, accounts types.GenesisAlloc) *state.StateDB
 		}
 	}
 	// Commit and re-open to start with a clean state.
-	root, _ := statedb.Commit(0, false)
-	statedb, _ = state.New(root, sdb, nil)
-	return statedb
+	root, err := statedb.Commit(0, false)
+	if err != nil {
+		return nil, fmt.Errorf("could not commit state: %s", err)
+	}
+	statedb, err = state.New(root, sdb, nil)
+	if err != nil {
+		return nil, fmt.Errorf("could not reopen state: %s", err)
+	}
+	return statedb, nil
 }
 
 func rlpHash(x interface{}) (h common.Hash) {

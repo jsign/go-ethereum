@@ -96,7 +96,7 @@ func (c *PointCache) Get(addr []byte) *verkle.Point {
 		return p
 	}
 	cacheMissGauge.Inc(1)
-	p = evaluateAddressPoint(addr)
+	p = EvaluateAddressPoint(addr)
 	c.lru.Add(string(addr), p)
 	return p
 }
@@ -278,7 +278,10 @@ func pointToHash(evaluated *verkle.Point, suffix byte) []byte {
 	return bytes[:]
 }
 
-func evaluateAddressPoint(address []byte) *verkle.Point {
+// EvaluateAddressPoint computes the base commitment from the address,
+// which can be used to further compute the corresponding tree-key for
+// its data.
+func EvaluateAddressPoint(address []byte) *verkle.Point {
 	if len(address) < 32 {
 		var aligned [32]byte
 		address = append(aligned[:32-len(address)], address...)
