@@ -43,6 +43,7 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/ethereum/go-ethereum/trie/utils"
 	"github.com/ethereum/go-ethereum/triedb"
+	"github.com/ethereum/go-verkle"
 	"github.com/holiman/uint256"
 	"github.com/urfave/cli/v2"
 )
@@ -82,10 +83,11 @@ var (
 )
 
 type input struct {
-	Alloc types.GenesisAlloc `json:"alloc,omitempty"`
-	Env   *stEnv             `json:"env,omitempty"`
-	Txs   []*txWithKey       `json:"txs,omitempty"`
-	TxRlp string             `json:"txsRlp,omitempty"`
+	Alloc types.GenesisAlloc            `json:"alloc,omitempty"`
+	Env   *stEnv                        `json:"env,omitempty"`
+	VKT   map[common.Hash]hexutil.Bytes `json:"vkt,omitempty"`
+	Txs   []*txWithKey                  `json:"txs,omitempty"`
+	TxRlp string                        `json:"txsRlp,omitempty"`
 }
 
 func Transition(ctx *cli.Context) error {
@@ -147,6 +149,7 @@ func Transition(ctx *cli.Context) error {
 		prestate Prestate
 		txIt     txIterator // txs to apply
 		allocStr = ctx.String(InputAllocFlag.Name)
+		vktStr   = ctx.String(InputVKTFlag.Name)
 
 		envStr    = ctx.String(InputEnvFlag.Name)
 		txStr     = ctx.String(InputTxsFlag.Name)
@@ -165,6 +168,12 @@ func Transition(ctx *cli.Context) error {
 		}
 	}
 	prestate.Pre = inputData.Alloc
+	if vktStr != stdinSelector && vktStr != "" {
+		if err := readFile(vktStr, "VKT", &inputData.VKT); err != nil {
+			return err
+		}
+	}
+	prestate.VKT = inputData.VKT
 
 	// Set the block environment
 	if envStr != stdinSelector {
@@ -208,10 +217,18 @@ func Transition(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	// Dump the execution result
+	// Dump the excution result
 	collector := make(Alloc)
-	s.DumpToCollector(collector, nil)
-	return dispatchOutput(ctx, baseDir, result, collector, body)
+	var vktleaves map[common.Hash]hexutil.Bytes
+	if !chainConfig.IsVerkle(big.NewInt(int64(prestate.Env.Number)), prestate.Env.Timestamp) {
+		// Only dump accounts in MPT mode, verkle does not have the
+		// concept of an alloc.
+		s.DumpToCollector(collector, nil)
+	} else {
+		vktleaves = make(map[common.Hash]hexutil.Bytes)
+		s.DumpVKTLeaves(vktleaves)
+	}
+	return dispatchOutput(ctx, baseDir, result, collector, body, vktleaves, result.VerkleProof, result.StateDiff)
 }
 
 func applyLondonChecks(env *stEnv, chainConfig *params.ChainConfig) error {
@@ -333,7 +350,7 @@ func saveFile(baseDir, filename string, data interface{}) error {
 
 // dispatchOutput writes the output data to either stderr or stdout, or to the specified
 // files
-func dispatchOutput(ctx *cli.Context, baseDir string, result *ExecutionResult, alloc Alloc, body hexutil.Bytes) error {
+func dispatchOutput(ctx *cli.Context, baseDir string, result *ExecutionResult, alloc Alloc, body hexutil.Bytes, vkt map[common.Hash]hexutil.Bytes, p *verkle.VerkleProof, k verkle.StateDiff) error {
 	stdOutObject := make(map[string]interface{})
 	stdErrObject := make(map[string]interface{})
 	dispatch := func(baseDir, fName, name string, obj interface{}) error {
@@ -359,6 +376,19 @@ func dispatchOutput(ctx *cli.Context, baseDir string, result *ExecutionResult, a
 	}
 	if err := dispatch(baseDir, ctx.String(OutputBodyFlag.Name), "body", body); err != nil {
 		return err
+	}
+	if vkt != nil {
+		if err := dispatch(baseDir, ctx.String(OutputVKTFlag.Name), "vkt", vkt); err != nil {
+			return err
+		}
+	}
+	if p != nil {
+		if err := dispatch(baseDir, ctx.String(OutputWitnessFlag.Name), "witness", struct {
+			Proof *verkle.VerkleProof
+			Diff  verkle.StateDiff
+		}{p, k}); err != nil {
+			return err
+		}
 	}
 	if len(stdOutObject) > 0 {
 		b, err := json.MarshalIndent(stdOutObject, "", "  ")
@@ -407,7 +437,7 @@ func VerkleKey(ctx *cli.Context) error {
 // VerkleKeys computes a set of tree keys given a genesis alloc.
 func VerkleKeys(ctx *cli.Context) error {
 	var allocStr = ctx.String(InputAllocFlag.Name)
-	var alloc core.GenesisAlloc
+	var alloc types.GenesisAlloc
 	// Figure out the prestate alloc
 	if allocStr == stdinSelector {
 		decoder := json.NewDecoder(os.Stdin)
@@ -426,7 +456,7 @@ func VerkleKeys(ctx *cli.Context) error {
 		return fmt.Errorf("error generating vkt: %w", err)
 	}
 
-	collector := make(map[common.Hash]hexutil.Bytes)
+	collector := map[common.Hash]hexutil.Bytes{}
 	it, err := vkt.NodeIterator(nil)
 	if err != nil {
 		panic(err)
@@ -473,8 +503,7 @@ func VerkleRoot(ctx *cli.Context) error {
 }
 
 func genVktFromAlloc(alloc types.GenesisAlloc) (*trie.VerkleTrie, error) {
-	sdb := triedb.NewDatabase(rawdb.NewMemoryDatabase(), triedb.VerkleDefaults)
-	vkt, err := trie.NewVerkleTrie(common.Hash{}, sdb, utils.NewPointCache(50))
+	vkt, err := trie.NewVerkleTrie(common.Hash{}, triedb.NewDatabase(rawdb.NewMemoryDatabase(), triedb.VerkleDefaults), utils.NewPointCache(50))
 	if err != nil {
 		return nil, fmt.Errorf("error creating vkt: %w", err)
 	}

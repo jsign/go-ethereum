@@ -264,6 +264,7 @@ func (pre *Prestate) Apply(vmConfig vm.Config, chainConfig *params.ChainConfig,
 			snapshot  = statedb.Snapshot()
 			prevGas   = gaspool.Gas()
 		)
+		txContext.AccessEvents = statedb.AccessEvents()
 		evm := vm.NewEVM(vmContext, txContext, statedb, chainConfig, vmConfig)
 
 		if tracer != nil && tracer.OnTxStart != nil {
@@ -428,7 +429,7 @@ func (pre *Prestate) Apply(vmConfig vm.Config, chainConfig *params.ChainConfig,
 }
 
 func MakePreState(db ethdb.Database, pre *Prestate, isVerkle bool) (*state.StateDB, error) {
-	sdb := state.NewDatabaseWithConfig(db, &triedb.Config{Preimages: true})
+	sdb := state.NewDatabaseWithConfig(db, triedb.VerkleDefaults)
 	statedb, _ := state.New(types.EmptyRootHash, sdb, nil)
 
 	if isVerkle {
