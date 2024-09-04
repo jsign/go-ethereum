@@ -86,7 +86,8 @@ func blockTestCmd(ctx *cli.Context) error {
 			continue
 		}
 		test := tests[name]
-		if err := test.Run(false, rawdb.HashScheme, false, tracer, func(res error, chain *core.BlockChain) {
+		// TODO(jsign): fix this
+		if err := test.Run(false, rawdb.PathScheme, false, tracer, func(res error, chain *core.BlockChain) {
 			if ctx.Bool(DumpFlag.Name) {
 				if state, _ := chain.State(); state != nil {
 					fmt.Println(string(state.Dump(nil)))

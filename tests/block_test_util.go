@@ -115,11 +115,14 @@ func (t *BlockTest) Run(snapshotter bool, scheme string, witness bool, tracer *t
 	if !ok {
 		return UnsupportedForkError{t.json.Network}
 	}
+	gspec := t.genesis(config)
+
 	// import pre accounts & construct test genesis block & state root
 	var (
 		db    = rawdb.NewMemoryDatabase()
 		tconf = &triedb.Config{
 			Preimages: true,
+			IsVerkle:  config.IsVerkle(big.NewInt(int64(gspec.Number)), gspec.Timestamp),
 		}
 	)
 	if scheme == rawdb.PathScheme {
@@ -128,7 +131,6 @@ func (t *BlockTest) Run(snapshotter bool, scheme string, witness bool, tracer *t
 		tconf.HashDB = hashdb.Defaults
 	}
 	// Commit genesis state
-	gspec := t.genesis(config)
 	triedb := triedb.NewDatabase(db, tconf)
 	gblock, err := gspec.Commit(db, triedb)
 	if err != nil {
