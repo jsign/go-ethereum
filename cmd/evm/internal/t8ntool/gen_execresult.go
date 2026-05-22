@@ -10,7 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/types/bal"
 )
 
 var _ = (*executionResultMarshaling)(nil)
@@ -33,7 +32,8 @@ func (e ExecutionResult) MarshalJSON() ([]byte, error) {
 		CurrentBlobGasUsed   *math.HexOrDecimal64  `json:"blobGasUsed,omitempty"`
 		RequestsHash         *common.Hash          `json:"requestsHash,omitempty"`
 		Requests             []hexutil.Bytes       `json:"requests"`
-		BlockAccessList      *bal.BlockAccessList  `json:"blockAccessList,omitempty"`
+		ExecutionWitness     *executionWitness     `json:"executionWitness,omitempty"`
+		BlockAccessList      hexutil.Bytes         `json:"blockAccessList,omitempty"`
 		BlockAccessListHash  *common.Hash          `json:"blockAccessListHash,omitempty"`
 	}
 	var enc ExecutionResult
@@ -57,6 +57,7 @@ func (e ExecutionResult) MarshalJSON() ([]byte, error) {
 			enc.Requests[k] = v
 		}
 	}
+	enc.ExecutionWitness = e.ExecutionWitness
 	enc.BlockAccessList = e.BlockAccessList
 	enc.BlockAccessListHash = e.BlockAccessListHash
 	return json.Marshal(&enc)
@@ -80,7 +81,8 @@ func (e *ExecutionResult) UnmarshalJSON(input []byte) error {
 		CurrentBlobGasUsed   *math.HexOrDecimal64  `json:"blobGasUsed,omitempty"`
 		RequestsHash         *common.Hash          `json:"requestsHash,omitempty"`
 		Requests             []hexutil.Bytes       `json:"requests"`
-		BlockAccessList      *bal.BlockAccessList  `json:"blockAccessList,omitempty"`
+		ExecutionWitness     *executionWitness     `json:"executionWitness,omitempty"`
+		BlockAccessList      *hexutil.Bytes        `json:"blockAccessList,omitempty"`
 		BlockAccessListHash  *common.Hash          `json:"blockAccessListHash,omitempty"`
 	}
 	var dec ExecutionResult
@@ -137,8 +139,11 @@ func (e *ExecutionResult) UnmarshalJSON(input []byte) error {
 			e.Requests[k] = v
 		}
 	}
+	if dec.ExecutionWitness != nil {
+		e.ExecutionWitness = dec.ExecutionWitness
+	}
 	if dec.BlockAccessList != nil {
-		e.BlockAccessList = dec.BlockAccessList
+		e.BlockAccessList = *dec.BlockAccessList
 	}
 	if dec.BlockAccessListHash != nil {
 		e.BlockAccessListHash = dec.BlockAccessListHash
